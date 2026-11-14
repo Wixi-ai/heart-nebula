@@ -1,1723 +1,1815 @@
 <!doctype html>
 <html lang="ru">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#05010a" />
-<title>Для тебя</title>
-<style>
-  :root{
-    --pink:#ff5c9a;
-    --violet:#b06cff;
-    --cyan:#6fe3ff;
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05010a" />
+  <title>Для тебя</title>
+  <style>
+    :root {
+      --pink: #ff5c9a;
+      --violet: #b06cff;
+      --cyan: #6fe3ff;
+    }
 
-  *{ box-sizing:border-box; }
-  html,body{ height:100%; }
+    * {
+      box-sizing: border-box;
+    }
 
-  body{
-    margin:0;
-    overflow:hidden;
-    background:#05010a;
-    color:#fff;
-    font-family: Georgia, "Times New Roman", serif;
-    -webkit-font-smoothing:antialiased;
-    background-image:
-      radial-gradient(1200px 800px at 15% 10%, rgba(120,40,180,.20), transparent 60%),
-      radial-gradient(900px 700px at 85% 85%, rgba(255,60,130,.14), transparent 60%),
-      radial-gradient(700px 500px at 50% 40%, rgba(40,80,160,.12), transparent 70%);
-  }
+    html,
+    body {
+      height: 100%;
+    }
 
-  /* плёночное зерно */
-  body::before{
-    content:"";
-    position:fixed; inset:0;
-    pointer-events:none;
-    z-index:3;
-    opacity:.035;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
-  }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #05010a;
+      color: #fff;
+      font-family: Georgia, "Times New Roman", serif;
+      -webkit-font-smoothing: antialiased;
+      background-image:
+        radial-gradient(1200px 800px at 15% 10%, rgba(120, 40, 180, .20), transparent 60%),
+        radial-gradient(900px 700px at 85% 85%, rgba(255, 60, 130, .14), transparent 60%),
+        radial-gradient(700px 500px at 50% 40%, rgba(40, 80, 160, .12), transparent 70%);
+    }
 
-  /* виньетка */
-  body::after{
-    content:"";
-    position:fixed; inset:0;
-    pointer-events:none;
-    z-index:4;
-    background:radial-gradient(120% 90% at 50% 42%, transparent 45%, rgba(2,0,6,.55) 100%);
-  }
+    /* плёночное зерно */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
+      opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+    }
 
-  canvas#scene{
-    position:fixed; inset:0;
-    width:100%; height:100%;
-    display:block;
-    z-index:1;
-  }
+    /* виньетка */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 4;
+      background: radial-gradient(120% 90% at 50% 42%, transparent 45%, rgba(2, 0, 6, .55) 100%);
+    }
 
-  /* ── интро ── */
-  #intro{
-    position:fixed; inset:0;
-    z-index:10;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    gap:30px;
-    background:radial-gradient(700px 520px at 50% 45%, rgba(70,12,95,.46), rgba(5,1,10,.87) 72%);
-    -webkit-backdrop-filter:blur(3px);
-    backdrop-filter:blur(3px);
-    transition:opacity .7s ease, visibility .7s ease;
-  }
-  body.opened #intro{ opacity:0; visibility:hidden; }
+    canvas#scene {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
 
-  .intro-kicker{
-    font-size:.72rem;
-    letter-spacing:.5em;
-    text-transform:uppercase;
-    color:rgba(255,190,220,.55);
-  }
+    /* ── интро ── */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      background: radial-gradient(700px 520px at 50% 45%, rgba(70, 12, 95, .46), rgba(5, 1, 10, .87) 72%);
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+      transition: opacity .7s ease, visibility .7s ease;
+    }
 
-  .open-btn{
-    appearance:none;
-    border:1px solid rgba(255,140,190,.32);
-    background:linear-gradient(180deg, rgba(255,90,150,.16), rgba(140,60,220,.10));
-    color:#ffe6f2;
-    padding:16px 36px;
-    border-radius:999px;
-    font:inherit;
-    font-size:1rem;
-    letter-spacing:.14em;
-    text-transform:uppercase;
-    cursor:pointer;
-    display:flex; align-items:center; gap:14px;
-    box-shadow:0 0 34px rgba(255,70,140,.22), inset 0 0 22px rgba(255,120,180,.07);
-    transition:transform .35s ease, box-shadow .35s ease, background .35s ease;
-  }
-  .open-btn:hover{
-    transform:translateY(-2px) scale(1.03);
-    box-shadow:0 0 54px rgba(255,70,140,.42), inset 0 0 26px rgba(255,120,180,.12);
-  }
-  .open-btn:focus-visible{ outline:2px solid rgba(255,140,190,.8); outline-offset:4px; }
-  .open-btn svg{
-    width:24px; height:22px;
-    fill:#ff6aa8;
-    filter:drop-shadow(0 0 7px rgba(255,80,150,.85));
-    animation:beat 1.9s ease-in-out infinite;
-  }
+    body.opened #intro {
+      opacity: 0;
+      visibility: hidden;
+    }
 
-  @keyframes beat{
-    0%,100%{ transform:scale(1); }
-    12%{ transform:scale(1.16); }
-    24%{ transform:scale(1); }
-    34%{ transform:scale(1.1); }
-    46%{ transform:scale(1); }
-  }
+    .intro-kicker {
+      font-size: .72rem;
+      letter-spacing: .5em;
+      text-transform: uppercase;
+      color: rgba(255, 190, 220, .55);
+    }
 
-  .intro-hint{
-    font-size:.72rem;
-    letter-spacing:.16em;
-    color:rgba(255,220,235,.32);
-  }
+    .open-btn {
+      appearance: none;
+      border: 1px solid rgba(255, 140, 190, .32);
+      background: linear-gradient(180deg, rgba(255, 90, 150, .16), rgba(140, 60, 220, .10));
+      color: #ffe6f2;
+      padding: 16px 36px;
+      border-radius: 999px;
+      font: inherit;
+      font-size: 1rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 0 34px rgba(255, 70, 140, .22), inset 0 0 22px rgba(255, 120, 180, .07);
+      transition: transform .35s ease, box-shadow .35s ease, background .35s ease;
+    }
 
-  /* ── текст открытки ── */
-  .copy{
-    position:fixed;
-    left:0; right:0;
-    bottom:max(26px, env(safe-area-inset-bottom));
-    z-index:5;
-    padding:0 26px;
-    text-align:center;
-    pointer-events:none;
-  }
+    .open-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 0 54px rgba(255, 70, 140, .42), inset 0 0 26px rgba(255, 120, 180, .12);
+    }
 
-  .reveal{
-    opacity:0;
-    transform:translateY(16px);
-    filter:blur(10px);
-    transition:opacity 1.4s ease, transform 1.4s ease, filter 1.4s ease;
-  }
-  body.opened .reveal{ opacity:1; transform:none; filter:blur(0); }
-  body.opened .d1{ transition-delay:.75s; }
-  body.opened .d2{ transition-delay:1.05s; }
-  body.opened .d3{ transition-delay:1.45s; }
+    .open-btn:focus-visible {
+      outline: 2px solid rgba(255, 140, 190, .8);
+      outline-offset: 4px;
+    }
 
-  h1{
-    margin:0 0 14px;
-    font-weight:400;
-    font-size:clamp(2.1rem, 5.4vw, 4.1rem);
-    line-height:1.05;
-    letter-spacing:.05em;
-    background:linear-gradient(100deg, #ffffff 0%, #ffb3d1 28%, #ff5c9a 55%, #b06cff 80%, #6fe3ff 100%);
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-    filter:drop-shadow(0 0 24px rgba(255,80,150,.30));
-  }
+    .open-btn svg {
+      width: 24px;
+      height: 22px;
+      fill: #ff6aa8;
+      filter: drop-shadow(0 0 7px rgba(255, 80, 150, .85));
+      animation: beat 1.9s ease-in-out infinite;
+    }
 
-  .message{
-    margin:0 auto;
-    max-width:36ch;
-    font-size:clamp(.95rem, 2.2vw, 1.28rem);
-    line-height:1.75;
-    color:rgba(255,235,245,.86);
-    text-shadow:0 0 20px rgba(255,90,150,.22);
-  }
+    @keyframes beat {
 
-  .signature{
-    display:inline-block;
-    margin-top:22px;
-    font-style:italic;
-    font-size:clamp(.68rem, 1.5vw, .82rem);
-    letter-spacing:.3em;
-    text-transform:uppercase;
-    color:#ff9cc4;
-    text-shadow:0 0 16px rgba(255,80,150,.5);
-  }
+      0%,
+      100% {
+        transform: scale(1);
+      }
 
-  /* ── звук ── */
-  #sound{
-    position:fixed;
-    top:max(18px, env(safe-area-inset-top));
-    right:18px;
-    z-index:7;
-    width:42px; height:42px;
-    border-radius:50%;
-    border:1px solid rgba(255,140,190,.25);
-    background:rgba(255,255,255,.03);
-    color:#ffb3d1;
-    font-size:1.1rem;
-    cursor:pointer;
-    opacity:0;
-    transition:opacity 1s ease .8s, background .3s ease, color .3s ease;
-    -webkit-backdrop-filter:blur(6px);
-    backdrop-filter:blur(6px);
-  }
-  body.opened #sound{ opacity:.75; }
-  #sound:hover{ background:rgba(255,90,150,.14); }
-  #sound.off{ color:rgba(255,180,210,.3); }
+      12% {
+        transform: scale(1.16);
+      }
 
-  @media (max-height: 520px){
-    .copy{ bottom:10px; }
-    h1{ font-size:1.55rem; margin-bottom:6px; }
-    .message{ font-size:.82rem; line-height:1.45; }
-    .signature{ margin-top:8px; font-size:.58rem; }
-    .intro-hint{ display:none; }
-  }
+      24% {
+        transform: scale(1);
+      }
 
-  @media (prefers-reduced-motion: reduce){
-    .open-btn svg{ animation:none; }
-  }
-</style>
+      34% {
+        transform: scale(1.1);
+      }
+
+      46% {
+        transform: scale(1);
+      }
+    }
+
+    .intro-hint {
+      font-size: .72rem;
+      letter-spacing: .16em;
+      color: rgba(255, 220, 235, .32);
+    }
+
+    /* ── текст открытки ── */
+    .copy {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: max(26px, env(safe-area-inset-bottom));
+      z-index: 5;
+      padding: 0 26px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      filter: blur(10px);
+      transition: opacity 1.4s ease, transform 1.4s ease, filter 1.4s ease;
+    }
+
+    body.opened .reveal {
+      opacity: 1;
+      transform: none;
+      filter: blur(0);
+    }
+
+    body.opened .d1 {
+      transition-delay: .75s;
+    }
+
+    body.opened .d2 {
+      transition-delay: 1.05s;
+    }
+
+    body.opened .d3 {
+      transition-delay: 1.45s;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-weight: 400;
+      font-size: clamp(2.1rem, 5.4vw, 4.1rem);
+      line-height: 1.05;
+      letter-spacing: .05em;
+      background: linear-gradient(100deg, #ffffff 0%, #ffb3d1 28%, #ff5c9a 55%, #b06cff 80%, #6fe3ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 0 24px rgba(255, 80, 150, .30));
+    }
+
+    .message {
+      margin: 0 auto;
+      max-width: 36ch;
+      font-size: clamp(.95rem, 2.2vw, 1.28rem);
+      line-height: 1.75;
+      color: rgba(255, 235, 245, .86);
+      text-shadow: 0 0 20px rgba(255, 90, 150, .22);
+    }
+
+    .signature {
+      display: inline-block;
+      margin-top: 22px;
+      font-style: italic;
+      font-size: clamp(.68rem, 1.5vw, .82rem);
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: #ff9cc4;
+      text-shadow: 0 0 16px rgba(255, 80, 150, .5);
+    }
+
+    /* ── звук ── */
+    #sound {
+      position: fixed;
+      top: max(18px, env(safe-area-inset-top));
+      right: 18px;
+      z-index: 7;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 140, 190, .25);
+      background: rgba(255, 255, 255, .03);
+      color: #ffb3d1;
+      font-size: 1.1rem;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 1s ease .8s, background .3s ease, color .3s ease;
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
+
+    body.opened #sound {
+      opacity: .75;
+    }
+
+    #sound:hover {
+      background: rgba(255, 90, 150, .14);
+    }
+
+    #sound.off {
+      color: rgba(255, 180, 210, .3);
+    }
+
+    @media (max-height: 520px) {
+      .copy {
+        bottom: 10px;
+      }
+
+      h1 {
+        font-size: 1.55rem;
+        margin-bottom: 6px;
+      }
+
+      .message {
+        font-size: .82rem;
+        line-height: 1.45;
+      }
+
+      .signature {
+        margin-top: 8px;
+        font-size: .58rem;
+      }
+
+      .intro-hint {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .open-btn svg {
+        animation: none;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<canvas id="scene" aria-hidden="true"></canvas>
+  <canvas id="scene" aria-hidden="true"></canvas>
 
-<div id="intro">
-  <div class="intro-kicker">подарок</div>
-  <button id="openBtn" class="open-btn" type="button">
-    <svg viewBox="0 0 32 29" aria-hidden="true"><path d="M16 29S0 18.5 0 9.5C0 4.3 4.3 0 9.5 0 12.3 0 14.8 1.3 16 3.4 17.2 1.3 19.7 0 22.5 0 27.7 0 32 4.3 32 9.5 32 18.5 16 29 16 29z"/></svg>
-    <span>Открыть</span>
-  </button>
-  <div class="intro-hint">лучше на весь экран</div>
-</div>
+  <div id="intro">
+    <div class="intro-kicker">подарок</div>
+    <button id="openBtn" class="open-btn" type="button">
+      <svg viewBox="0 0 32 29" aria-hidden="true">
+        <path
+          d="M16 29S0 18.5 0 9.5C0 4.3 4.3 0 9.5 0 12.3 0 14.8 1.3 16 3.4 17.2 1.3 19.7 0 22.5 0 27.7 0 32 4.3 32 9.5 32 18.5 16 29 16 29z" />
+      </svg>
+      <span>Открыть</span>
+    </button>
+    <div class="intro-hint">лучше на весь экран</div>
+  </div>
 
-<button id="sound" type="button" aria-label="Включить или выключить звук">♪</button>
+  <button id="sound" type="button" aria-label="Включить или выключить звук">♪</button>
 
-<div class="copy">
-  <h1 id="title" class="reveal d1">Для тебя</h1>
-  <p id="message" class="message reveal d2"></p>
-  <span id="signature" class="signature reveal d3">Твой Гера</span>
-</div>
+  <div class="copy">
+    <h1 id="title" class="reveal d1">Для тебя</h1>
+    <p id="message" class="message reveal d2"></p>
+    <span id="signature" class="signature reveal d3">Твой Гера</span>
+  </div>
 
-<script>
-(() => {
-  "use strict";
+  <script>
+    (() => {
+      "use strict";
 
-  /* ─────────────────────────────────────────────
-     ТЕКСТ ОТКРЫТКИ — меняется здесь
-     ───────────────────────────────────────────── */
-  const CONFIG = {
-    name: "",                       // например "Катя" — добавится в заголовок
-    title: "Для тебя",
-    message: [
-      "Ты — моя вселенная.",
-      "Я люблю тебя больше, чем звёзд на небе."
-    ],
-    signature: "Твой Гера"
-  };
+      /* ─────────────────────────────────────────────
+         ТЕКСТ ОТКРЫТКИ — меняется здесь
+         ───────────────────────────────────────────── */
+      const CONFIG = {
+        name: "Катя",                       // например "Катя" — добавится в заголовок
+        title: "Для тебя",
+        message: [
+          "Ты — моя вселенная.",
+          "Я люблю тебя больше, чем звёзд на небе."
+        ],
+        signature: "Твой Гера"
+      };
 
-  const titleEl = document.getElementById("title");
-  const messageEl = document.getElementById("message");
-  const signatureEl = document.getElementById("signature");
+      const titleEl = document.getElementById("title");
+      const messageEl = document.getElementById("message");
+      const signatureEl = document.getElementById("signature");
 
-  titleEl.textContent = CONFIG.name ? `${CONFIG.title}, ${CONFIG.name}` : CONFIG.title;
-  messageEl.innerHTML = CONFIG.message
-    .map(line => `<span>${escapeHtml(line)}</span>`)
-    .join("<br>");
-  signatureEl.textContent = CONFIG.signature;
+      titleEl.textContent = CONFIG.name ? `${CONFIG.title}, ${CONFIG.name}` : CONFIG.title;
+      messageEl.innerHTML = CONFIG.message
+        .map(line => `<span>${escapeHtml(line)}</span>`)
+        .join("<br>");
+      signatureEl.textContent = CONFIG.signature;
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, ch => ({
-      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-    }[ch]));
-  }
-
-  /* ─────────────────────────────────────────────
-     КАНВАС
-     ───────────────────────────────────────────── */
-  const canvas = document.getElementById("scene");
-  const ctx = canvas.getContext("2d");
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  let W = 0, H = 0, dpr = 1;
-  let R = 200, heartCX = 0, heartCY = 0;
-  let NSIZE = 0, NCX = 0, NCY = 0, NR = 200;
-  let neb = null, nctx = null;
-  let glowCv = null, glowSize = 0;
-
-  let stars = [];
-  let meteors = [];
-  let burst = [];
-  let particles = [];
-  let clouds = [];
-  let dust = [];
-  let tufts = [];
-  let tendrils = [];
-  let filaments = [];
-  let knots = [];
-  let bites = [];
-  let trail = [];
-  let shockwaves = [];
-  let wind = [];
-
-  let mx = .5, my = .5, tmx = .5, tmy = .5;
-  let opened = false;
-  let reveal = 0, revealEase = 0, revealStart = 0;
-  let openedAt = 0, windTimer = 0;
-  let lastMeteor = 0, nextMeteor = 3500;
-  let pointerSeen = false, lastTrailX = 0, lastTrailY = 0, lastTrailT = 0;
-  let beatOffset = 0;
-
-  const TAU = Math.PI * 2;
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const clamp01 = v => Math.max(0, Math.min(1, v));
-  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-  const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
-  const easeOutBack = t => {
-    const c1 = 1.70158, c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-  };
-
-  /* ── палитра ── */
-  const PALETTE = [
-    { c: [255, 214, 236], w: 1.6 },
-    { c: [255, 120, 170], w: 2.6 },
-    { c: [255, 70, 120],  w: 2.2 },
-    { c: [200, 90, 255],  w: 2.4 },
-    { c: [130, 110, 255], w: 1.8 },
-    { c: [90, 210, 255],  w: 1.1 }
-  ];
-
-  const SIDE_COOL = [[150,90,255],[90,130,255],[80,200,255],[190,150,255]];
-  const SIDE_WARM = [[255,90,145],[235,70,190],[255,150,190],[255,210,230]];
-  const SIDE_MID  = [[225,120,220],[255,160,210],[180,120,255],[255,225,240]];
-
-  function pickNebulaColor(x, centerBias){
-    let pool;
-    if (x < -0.12) pool = SIDE_COOL;
-    else if (x > 0.15) pool = SIDE_WARM;
-    else pool = SIDE_MID;
-
-    if (centerBias > .68 && Math.random() < .18) return [255, 235, 245];
-    return pool[(Math.random() * pool.length) | 0];
-  }
-
-  function pickColor(centerBias){
-    // ближе к центру — теплее и светлее
-    const roll = Math.random();
-    if (centerBias > .55){
-      if (roll < .45) return PALETTE[0].c;
-      if (roll < .80) return PALETTE[1].c;
-      return PALETTE[2].c;
-    }
-    let total = 0;
-    for (const p of PALETTE) total += p.w;
-    let r = Math.random() * total;
-    for (const p of PALETTE){
-      r -= p.w;
-      if (r <= 0) return p.c;
-    }
-    return PALETTE[1].c;
-  }
-
-  /* ── спрайты свечения ── */
-  const spriteCache = new Map();
-
-  function glowSprite(rgb, hardness = .25){
-    const key = rgb.join(",") + "|" + hardness;
-    if (spriteCache.has(key)) return spriteCache.get(key);
-
-    const size = 64;
-    const c = document.createElement("canvas");
-    c.width = c.height = size;
-    const g = c.getContext("2d");
-    const grd = g.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-    grd.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},1)`);
-    grd.addColorStop(hardness, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},.55)`);
-    grd.addColorStop(.65, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},.12)`);
-    grd.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
-    g.fillStyle = grd;
-    g.fillRect(0, 0, size, size);
-
-    spriteCache.set(key, c);
-    return c;
-  }
-
-  /* ── сердце ── */
-  function heartPoint(t){
-    const x = Math.pow(Math.sin(t), 3);
-    const y = (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) / 16;
-    return { x, y };
-  }
-
-  function heartPath(c, cx, cy, s){
-    c.beginPath();
-    const N = 280;
-    for (let i = 0; i <= N; i++){
-      const p = heartPoint(i / N * TAU);
-      const px = cx + p.x * s;
-      const py = cy - p.y * s;
-      if (i === 0) c.moveTo(px, py);
-      else c.lineTo(px, py);
-    }
-    c.closePath();
-  }
-
-  /* ── рваный край: несколько гармоник по контуру ── */
-  const EDGE_SEEDS = [
-    { k: 1,  amp: .026, phase: rand(0, TAU), speed: .06 },
-    { k: 2,  amp: .018, phase: rand(0, TAU), speed: .10 },
-    { k: 3,  amp: .014, phase: rand(0, TAU), speed: .14 },
-    { k: 5,  amp: .012, phase: rand(0, TAU), speed: .19 },
-    { k: 8,  amp: .010, phase: rand(0, TAU), speed: .25 },
-    { k: 13, amp: .008, phase: rand(0, TAU), speed: .32 },
-    { k: 21, amp: .006, phase: rand(0, TAU), speed: .40 },
-    { k: 34, amp: .004, phase: rand(0, TAU), speed: .50 }
-  ];
-
-  // глубокие «выгрызенные» впадины на краю
-  const EDGE_NOTCHES = [
-    { a: .55, w: .055, d: .055 },
-    { a: 2.15, w: .070, d: .080 },
-    { a: 3.55, w: .050, d: .050 },
-    { a: 5.15, w: .080, d: .090 }
-  ];
-
-  function edgeNoise(t, time){
-    let d = 0;
-    for (const s of EDGE_SEEDS){
-      d += Math.sin(t * s.k + s.phase + time * s.speed) * s.amp;
-    }
-    // верхние доли и нижний кончик рвутся сильнее
-    const env = .55 + .45 * Math.sin(t * 3 + .7);
-    d *= env;
-
-    for (const n of EDGE_NOTCHES){
-      const diff = Math.atan2(Math.sin(t - n.a), Math.cos(t - n.a));
-      d -= n.d * Math.exp(-Math.pow(diff / n.w, 2));
-    }
-
-    return d;
-  }
-
-  function raggedPoint(t, time){
-    const p = heartPoint(t);
-    const r = 1 + edgeNoise(t, time);
-    return { x: p.x * r, y: p.y * r };
-  }
-
-  function raggedHeartPath(c, cx, cy, s, time){
-    c.beginPath();
-    const N = 300;
-    for (let i = 0; i <= N; i++){
-      const p = raggedPoint(i / N * TAU, time);
-      const px = cx + p.x * s;
-      const py = cy - p.y * s;
-      if (i === 0) c.moveTo(px, py);
-      else c.lineTo(px, py);
-    }
-    c.closePath();
-  }
-
-  /* ── мягкое внешнее свечение (один раз на ресайз) ── */
-  function buildGlow(){
-    glowSize = NSIZE * 1.5;
-    glowCv = document.createElement("canvas");
-    glowCv.width = Math.round(glowSize * dpr);
-    glowCv.height = Math.round(glowSize * dpr);
-
-    const g = glowCv.getContext("2d");
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const cx = glowSize / 2;
-    const cy = glowSize / 2 - R * .155;
-
-    const grd = g.createRadialGradient(cx, cy - R * .15, R * .08, cx, cy, R * 1.22);
-    grd.addColorStop(0, "rgba(255,95,160,.42)");
-    grd.addColorStop(.42, "rgba(205,60,225,.26)");
-    grd.addColorStop(.78, "rgba(115,55,235,.12)");
-    grd.addColorStop(1, "rgba(60,20,140,0)");
-
-    g.fillStyle = grd;
-    g.filter = `blur(${Math.max(12, Math.round(R * .17))}px)`;
-    raggedHeartPath(g, cx, cy, R * 1.01, 0);
-    g.fill();
-    g.filter = "none";
-  }
-
-  /* ── частицы туманности ── */
-  function buildParticles(){
-    const count = W < 640 ? 1500 : 3200;
-    particles = [];
-
-    for (let i = 0; i < count; i++){
-      const t = Math.random() * TAU;
-      const edge = heartPoint(t);
-
-      // радиальный коэффициент: ближе к краю — плотнее
-      let k;
-      if (i < count * .18){
-        k = rand(.90, 1.0);
-      } else {
-        k = Math.pow(Math.random(), .58);
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, ch => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        }[ch]));
       }
 
-      // лёгкое дрожание внутри
-      const jx = rand(-.014, .014);
-      const jy = rand(-.014, .014);
+      /* ─────────────────────────────────────────────
+         КАНВАС
+         ───────────────────────────────────────────── */
+      const canvas = document.getElementById("scene");
+      const ctx = canvas.getContext("2d");
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      const x = edge.x * k + jx;
-      const y = edge.y * k + jy;
-      const centerBias = 1 - k;
+      let W = 0, H = 0, dpr = 1;
+      let R = 200, heartCX = 0, heartCY = 0;
+      let NSIZE = 0, NCX = 0, NCY = 0, NR = 200;
+      let neb = null, nctx = null;
+      let glowCv = null, glowSize = 0;
 
-      particles.push({
-        x, y,
-        k,
-        rgb: pickNebulaColor(x, centerBias),
-        size: rand(.8, 2.8) * Math.max(.75, NR / 240),
-        alpha: rand(.25, .82) * (1 - k * .18),
-        phase: Math.random() * TAU,
-        tw: rand(.35, 1.6),
-        drift: rand(.15, .55),
-        dir: Math.random() < .5 ? -1 : 1
-      });
-    }
-  }
+      let stars = [];
+      let meteors = [];
+      let burst = [];
+      let particles = [];
+      let clouds = [];
+      let dust = [];
+      let tufts = [];
+      let tendrils = [];
+      let filaments = [];
+      let knots = [];
+      let bites = [];
+      let trail = [];
+      let shockwaves = [];
+      let wind = [];
 
-  /* ── облака туманности ── */
-  function buildClouds(){
-    clouds = [];
-    const total = W < 640 ? 32 : 48;
+      let mx = .5, my = .5, tmx = .5, tmy = .5;
+      let opened = false;
+      let reveal = 0, revealEase = 0, revealStart = 0;
+      let openedAt = 0, windTimer = 0;
+      let lastMeteor = 0, nextMeteor = 3500;
+      let pointerSeen = false, lastTrailX = 0, lastTrailY = 0, lastTrailT = 0;
+      let beatOffset = 0;
 
-    for (let i = 0; i < total; i++){
-      const t = Math.random() * TAU;
-      const edge = heartPoint(t);
-      const k = rand(.08, .78);
-      const x = edge.x * k;
-      const y = edge.y * k;
+      const TAU = Math.PI * 2;
+      const rand = (a, b) => a + Math.random() * (b - a);
+      const clamp01 = v => Math.max(0, Math.min(1, v));
+      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+      const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
+      const easeOutBack = t => {
+        const c1 = 1.70158, c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+      };
 
-      clouds.push({
-        x, y,
-        size: NR * rand(.55, 1.35),
-        alpha: rand(.12, .30),
-        phase: Math.random() * TAU,
-        speed: rand(.08, .22),
-        rgb: pickNebulaColor(x, 1 - k),
-        squash: rand(.55, 1)
-      });
-    }
+      /* ── палитра ── */
+      const PALETTE = [
+        { c: [255, 214, 236], w: 1.6 },
+        { c: [255, 120, 170], w: 2.6 },
+        { c: [255, 70, 120], w: 2.2 },
+        { c: [200, 90, 255], w: 2.4 },
+        { c: [130, 110, 255], w: 1.8 },
+        { c: [90, 210, 255], w: 1.1 }
+      ];
 
-    // мелкая клочковатая структура
-    for (let i = 0; i < (W < 640 ? 110 : 190); i++){
-      const t = Math.random() * TAU;
-      const edge = heartPoint(t);
-      const k = Math.pow(Math.random(), .72);
-      const x = edge.x * k;
-      const y = edge.y * k;
+      const SIDE_COOL = [[150, 90, 255], [90, 130, 255], [80, 200, 255], [190, 150, 255]];
+      const SIDE_WARM = [[255, 90, 145], [235, 70, 190], [255, 150, 190], [255, 210, 230]];
+      const SIDE_MID = [[225, 120, 220], [255, 160, 210], [180, 120, 255], [255, 225, 240]];
 
-      clouds.push({
-        x, y,
-        size: NR * rand(.08, .32),
-        alpha: rand(.07, .20),
-        phase: Math.random() * TAU,
-        speed: rand(.12, .35),
-        rgb: pickNebulaColor(x, 1 - k),
-        squash: rand(.45, 1)
-      });
-    }
-  }
+      function pickNebulaColor(x, centerBias) {
+        let pool;
+        if (x < -0.12) pool = SIDE_COOL;
+        else if (x > 0.15) pool = SIDE_WARM;
+        else pool = SIDE_MID;
 
-  function buildDust(){
-    dust = [];
-    for (let i = 0; i < (W < 640 ? 12 : 18); i++){
-      const t = Math.random() * TAU;
-      const edge = heartPoint(t);
-      const k = rand(.12, .75);
-      dust.push({
-        x: edge.x * k,
-        y: edge.y * k,
-        size: NR * rand(.32, .92),
-        alpha: rand(.14, .32),
-        phase: Math.random() * TAU,
-        speed: rand(.06, .16),
-        squash: rand(.18, .55),
-        rot: Math.random() * TAU
-      });
-    }
-  }
-
-  /* ── рваные клочья по краю ── */
-  function buildTufts(){
-    tufts = [];
-    const total = W < 640 ? 64 : 120;
-
-    for (let i = 0; i < total; i++){
-      const t = Math.random() * TAU;
-      const big = Math.random() < .30;
-      const p = heartPoint(t);
-
-      tufts.push({
-        t,
-        size: NR * (big ? rand(.20, .50) : rand(.04, .14)),
-        alpha: big ? rand(.05, .12) : rand(.08, .20),
-        offset: big ? rand(1.00, 1.16) : rand(.98, 1.07),
-        squash: rand(.28, .9),
-        rgb: pickNebulaColor(p.x, .4),
-        phase: Math.random() * TAU,
-        speed: rand(.1, .35)
-      });
-    }
-  }
-
-  /* ── длинные пряди, уходящие наружу ── */
-  function buildTendrils(){
-    tendrils = [];
-    const total = W < 640 ? 22 : 40;
-
-    for (let i = 0; i < total; i++){
-      const t = Math.random() * TAU;
-      const p = heartPoint(t);
-
-      tendrils.push({
-        t,
-        len: rand(.12, .42),
-        curve: rand(-.55, .55),
-        width: rand(1.5, 4.0),
-        alpha: rand(.14, .38),
-        rgb: pickNebulaColor(p.x, .4),
-        phase: Math.random() * TAU,
-        speed: rand(.2, .6),
-        tip: Math.random() < .35
-      });
-    }
-  }
-
-  /* ── тонкие газовые волокна внутри ── */
-  function buildFilaments(){
-    filaments = [];
-    const total = W < 640 ? 9 : 14;
-
-    for (let i = 0; i < total; i++){
-      filaments.push({
-        start: Math.random() * TAU,
-        arc: rand(.05, .18),
-        k: rand(.40, .90),
-        wave: rand(.03, .10),
-        width: rand(.7, 1.5),
-        alpha: rand(.05, .13),
-        rgb: pickNebulaColor(rand(-.8, .8), .5),
-        phase: Math.random() * TAU,
-        speed: rand(.1, .3)
-      });
-    }
-  }
-
-  /* ── звёздные сгустки внутри туманности ── */
-  function buildKnots(){
-    knots = [];
-    const total = W < 640 ? 14 : 24;
-
-    for (let i = 0; i < total; i++){
-      const t = Math.random() * TAU;
-      const p = heartPoint(t);
-      const k = Math.pow(Math.random(), .7) * .9;
-      const x = p.x * k;
-      const y = p.y * k;
-
-      knots.push({
-        x, y,
-        size: NR * rand(.015, .05),
-        alpha: rand(.45, .95),
-        rgb: Math.random() < .5 ? [255, 245, 250] : pickNebulaColor(x, .6),
-        phase: Math.random() * TAU,
-        tw: rand(.5, 1.8),
-        flare: Math.random() < .35
-      });
-    }
-  }
-
-  /* ── куски, выгрызенные из края ── */
-  function buildBites(){
-    bites = [];
-    const total = W < 640 ? 16 : 24;
-
-    for (let i = 0; i < total; i++){
-      bites.push({
-        t: Math.random() * TAU,
-        k: rand(.95, 1.07),
-        size: NR * rand(.09, .24),
-        alpha: rand(.26, .52),
-        squash: rand(.30, 1),
-        rot: Math.random() * TAU,
-        phase: Math.random() * TAU,
-        speed: rand(.05, .2)
-      });
-    }
-  }
-
-  /* ── звёзды ── */
-  function buildStars(){
-    stars = [];
-    const n = Math.min(560, Math.round(W * H / 2000));
-
-    for (let i = 0; i < n; i++){
-      const layer = Math.random() < .62 ? 0 : (Math.random() < .72 ? 1 : 2);
-      const baseR = [.45, .8, 1.35][layer];
-      const baseA = [.22, .40, .72][layer];
-      const colorRoll = Math.random();
-      let rgb;
-      if (colorRoll < .72) rgb = [255, 255, 255];
-      else if (colorRoll < .84) rgb = [200, 225, 255];
-      else if (colorRoll < .94) rgb = [255, 205, 225];
-      else rgb = [255, 230, 190];
-
-      stars.push({
-        x: Math.random(),
-        y: Math.random(),
-        r: baseR * rand(.6, 1.4),
-        a: baseA * rand(.55, 1),
-        ph: Math.random() * TAU,
-        sp: rand(.35, 1.5),
-        rgb,
-        layer
-      });
-    }
-  }
-
-  /* ── размеры и перестройка ── */
-  function resize(){
-    dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth < 640 ? 1.75 : 2);
-    W = window.innerWidth;
-    H = window.innerHeight;
-
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const short = H < 540;
-    const rH = H > 800 ? .29 : .265;
-    const rW = W < 640 ? .40 : .34;
-    R = Math.min(W * (short ? .30 : rW), H * (short ? .21 : rH));
-    heartCX = W / 2;
-    heartCY = H * (short ? .34 : .375);
-
-    buildStars();
-    buildNebulaCanvas();
-    lastMeteor = performance.now();
-  }
-
-  function buildNebulaCanvas(){
-    NSIZE = Math.ceil(R * 2.8);
-    neb = document.createElement("canvas");
-    neb.width = Math.round(NSIZE * dpr);
-    neb.height = Math.round(NSIZE * dpr);
-    nctx = neb.getContext("2d");
-    nctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    NCX = NSIZE / 2;
-    NCY = NSIZE / 2 - R * .155; // центрируем визуальный центр сердца
-    NR = R;
-
-    buildParticles();
-    buildClouds();
-    buildDust();
-    buildTufts();
-    buildTendrils();
-    buildFilaments();
-    buildKnots();
-    buildBites();
-    buildGlow();
-  }
-
-  /* ── отрисовка туманности в офскрин ── */
-  function drawNebula(time, sinceOpen){
-    nctx.clearRect(0, 0, NSIZE, NSIZE);
-    nctx.save();
-    raggedHeartPath(nctx, NCX, NCY, NR, time);
-    nctx.clip();
-
-    const mox = 0;
-    const moy = 0;
-
-    // плотная основа — силуэт сердца
-    const base = nctx.createRadialGradient(
-      NCX + mox * .4, NCY - NR * .12 + moy * .4, NR * .05,
-      NCX + mox * .2, NCY + moy * .2, NR * 1.18
-    );
-    base.addColorStop(0, "rgba(145,48,132,.34)");
-    base.addColorStop(.42, "rgba(88,30,136,.25)");
-    base.addColorStop(.78, "rgba(45,16,90,.14)");
-    base.addColorStop(1, "rgba(25,8,55,.055)");
-    nctx.globalCompositeOperation = "source-over";
-    nctx.globalAlpha = 1;
-    nctx.fillStyle = base;
-    nctx.fillRect(0, 0, NSIZE, NSIZE);
-
-    // цветовой перекос: слева холоднее, справа теплее
-    const side = nctx.createLinearGradient(NCX - NR, NCY, NCX + NR, NCY);
-    side.addColorStop(0, "rgba(60,45,170,.10)");
-    side.addColorStop(.5, "rgba(120,25,95,.05)");
-    side.addColorStop(1, "rgba(255,70,130,.11)");
-    nctx.fillStyle = side;
-    nctx.fillRect(0, 0, NSIZE, NSIZE);
-
-    // облака
-    nctx.globalCompositeOperation = "lighter";
-    for (const c of clouds){
-      const breathe = .82 + .18 * Math.sin(time * c.speed + c.phase);
-      const s = c.size * (1 + .025 * Math.sin(time * .18 + c.phase));
-      const x = NCX + c.x * NR + Math.sin(time * .12 + c.phase) * NR * .012 + mox * .7;
-      const y = NCY - c.y * NR + Math.cos(time * .10 + c.phase) * NR * .012 + moy * .7;
-
-      nctx.globalAlpha = c.alpha * breathe;
-      nctx.drawImage(glowSprite(c.rgb, .18), x - s/2, y - s * c.squash/2, s, s * c.squash);
-    }
-
-    // пыль — вырезаем мягкие дыры
-    nctx.globalCompositeOperation = "destination-out";
-    for (const d of dust){
-      const s = d.size * (1 + .05 * Math.sin(time * d.speed + d.phase));
-      const x = NCX + d.x * NR + mox * .5;
-      const y = NCY - d.y * NR + moy * .5;
-
-      nctx.save();
-      nctx.globalAlpha = d.alpha;
-      nctx.translate(x, y);
-      nctx.rotate(d.rot + time * d.speed * .08);
-      nctx.scale(1, d.squash);
-      nctx.drawImage(glowSprite([255, 255, 255], .05), -s/2, -s/2, s, s);
-      nctx.restore();
-    }
-
-    // частицы
-    nctx.globalCompositeOperation = "lighter";
-    for (const p of particles){
-      const tw = .55 + .45 * Math.sin(time * p.tw + p.phase);
-      const drift = Math.sin(time * p.drift + p.phase) * NR * .004;
-      const s = p.size * (.75 + .45 * tw);
-      const depth = .35 + .65 * p.k;
-
-      nctx.globalAlpha = p.alpha * tw;
-      nctx.drawImage(
-        glowSprite(p.rgb),
-        NCX + p.x * NR + drift + mox * depth - s/2,
-        NCY - p.y * NR + drift * .6 + moy * depth - s/2,
-        s, s
-      );
-    }
-
-    // рваные выгрызенные куски по краю
-    nctx.globalCompositeOperation = "destination-out";
-    for (const b of bites){
-      const p = raggedPoint(b.t, time);
-      const x = NCX + p.x * NR * b.k + mox * .5;
-      const y = NCY - p.y * NR * b.k + moy * .5;
-      const s = b.size * (1 + .1 * Math.sin(time * b.speed + b.phase));
-
-      nctx.save();
-      nctx.globalAlpha = b.alpha;
-      nctx.translate(x, y);
-      nctx.rotate(b.rot + time * b.speed * .1);
-      nctx.scale(1, b.squash);
-      nctx.drawImage(glowSprite([255, 255, 255], .02), -s/2, -s/2, s, s);
-      nctx.restore();
-    }
-
-    // тонкие волокна газа
-    nctx.globalCompositeOperation = "lighter";
-    nctx.lineCap = "round";
-    for (const f of filaments){
-      nctx.beginPath();
-      for (let j = 0; j <= 30; j++){
-        const u = j / 30;
-        const t = f.start + f.arc * TAU * u;
-        const p = raggedPoint(t, time);
-        const k = f.k + Math.sin(u * Math.PI * 2 + f.phase + time * f.speed) * f.wave;
-        const x = NCX + p.x * NR * k + mox * .5;
-        const y = NCY - p.y * NR * k + moy * .5;
-        if (j === 0) nctx.moveTo(x, y);
-        else nctx.lineTo(x, y);
-      }
-      nctx.strokeStyle = `rgba(${f.rgb[0]},${f.rgb[1]},${f.rgb[2]},${f.alpha})`;
-      nctx.lineWidth = f.width;
-      nctx.stroke();
-    }
-
-    // звёздные сгустки
-    for (const s of knots){
-      const tw = .65 + .35 * Math.sin(time * s.tw + s.phase);
-      const size = s.size * (1 + .25 * tw);
-      const x = NCX + s.x * NR + mox * .6;
-      const y = NCY - s.y * NR + moy * .6;
-
-      nctx.globalAlpha = s.alpha * tw;
-      nctx.drawImage(glowSprite(s.rgb, .08), x - size/2, y - size/2, size, size);
-
-      if (s.flare){
-        nctx.globalAlpha = s.alpha * tw * .55;
-        nctx.strokeStyle = `rgba(${s.rgb[0]},${s.rgb[1]},${s.rgb[2]},.7)`;
-        nctx.lineWidth = .6;
-        const l = size * 4;
-        nctx.beginPath();
-        nctx.moveTo(x - l, y); nctx.lineTo(x + l, y);
-        nctx.moveTo(x, y - l); nctx.lineTo(x, y + l);
-        nctx.stroke();
-      }
-    }
-    nctx.globalAlpha = 1;
-
-    nctx.restore();
-
-    // пряди, уходящие за край сердца
-    nctx.save();
-    nctx.globalCompositeOperation = "lighter";
-    nctx.lineCap = "round";
-    for (const d of tendrils){
-      const p = raggedPoint(d.t, time);
-      const len = d.len * (1 + .08 * Math.sin(time * d.speed + d.phase));
-      const plen = Math.hypot(p.x, p.y) || 1;
-      const nx = p.x / plen, ny = p.y / plen;
-      const tx = -ny, ty = nx;
-      const N = 10;
-      let prevX = 0, prevY = 0;
-
-      for (let j = 0; j <= N; j++){
-        const u = j / N;
-        const r = 1 + len * u;
-        const lat = Math.sin(u * Math.PI) * d.curve * len;
-        const hx = p.x * r + tx * lat + mox * .35;
-        const hy = p.y * r + ty * lat + moy * .35;
-        const x = NCX + hx * NR;
-        const y = NCY - hy * NR;
-
-        if (j === 0){ prevX = x; prevY = y; continue; }
-        nctx.strokeStyle = `rgba(${d.rgb[0]},${d.rgb[1]},${d.rgb[2]},${d.alpha * (1 - u * .72)})`;
-        nctx.lineWidth = d.width * (1 - u * .65);
-        nctx.beginPath();
-        nctx.moveTo(prevX, prevY);
-        nctx.lineTo(x, y);
-        nctx.stroke();
-        prevX = x; prevY = y;
+        if (centerBias > .68 && Math.random() < .18) return [255, 235, 245];
+        return pool[(Math.random() * pool.length) | 0];
       }
 
-      if (d.tip){
-        const s = d.width * 3.5;
-        nctx.globalAlpha = d.alpha * .8;
-        nctx.drawImage(glowSprite(d.rgb, .1), prevX - s/2, prevY - s/2, s, s);
-      }
-    }
-
-    // мягкие клочья снаружи
-    for (const f of tufts){
-      const p = raggedPoint(f.t, time);
-      const x = NCX + p.x * NR * f.offset + mox * .5;
-      const y = NCY - p.y * NR * f.offset + moy * .5;
-      const s = f.size * (1 + .08 * Math.sin(time * f.speed + f.phase));
-
-      nctx.globalAlpha = f.alpha * (.7 + .3 * Math.sin(time * f.speed * 1.3 + f.phase));
-      nctx.drawImage(glowSprite(f.rgb, .12), x - s/2, y - s * f.squash/2, s, s * f.squash);
-    }
-    nctx.restore();
-    nctx.globalAlpha = 1;
-
-    // светящийся контур
-    nctx.save();
-    nctx.globalCompositeOperation = "lighter";
-    nctx.globalAlpha = .06;
-    nctx.strokeStyle = "rgba(255,150,200,.45)";
-    nctx.lineWidth = Math.max(.8, NR / 240);
-    nctx.shadowColor = "rgba(255,80,150,.9)";
-    nctx.shadowBlur = NR * .04;
-    raggedHeartPath(nctx, NCX, NCY, NR, time);
-    nctx.stroke();
-    nctx.restore();
-
-    // яркие неровные дуги по контуру
-    nctx.save();
-    nctx.globalCompositeOperation = "lighter";
-    nctx.lineCap = "round";
-    const arcs = 12;
-    for (let i = 0; i < arcs; i++){
-      const start = i / arcs * TAU + .35;
-      const span = .04 + .05 * Math.sin(i * 2.3 + 1.1);
-      nctx.beginPath();
-      for (let j = 0; j <= 12; j++){
-        const t = start + span * TAU * (j / 12);
-        const p = raggedPoint(t, time);
-        const x = NCX + p.x * NR;
-        const y = NCY - p.y * NR;
-        if (j === 0) nctx.moveTo(x, y);
-        else nctx.lineTo(x, y);
-      }
-      nctx.strokeStyle = `rgba(255,195,230,${.10 + .12 * Math.abs(Math.sin(i * 1.7 + time * .3))})`;
-      nctx.lineWidth = 1.0 + .8 * Math.abs(Math.sin(i * 2.1));
-      nctx.stroke();
-    }
-    nctx.restore();
-
-    // энергия, бегущая по краю после открытия
-    if (opened && sinceOpen < 3.4){
-      const fade = Math.exp(-sinceOpen * 1.15) * Math.min(1, sinceOpen * 7);
-      const head = (sinceOpen * .62) % 1;
-
-      nctx.save();
-      nctx.globalCompositeOperation = "lighter";
-      nctx.lineCap = "round";
-
-      for (let k = 0; k < 2; k++){
-        const h = (head - k * .035 + 1) % 1;
-        const span = .13;
-        nctx.beginPath();
-        for (let j = 0; j <= 20; j++){
-          const t = (h + span * (j / 20)) * TAU;
-          const p = raggedPoint(t, time);
-          const x = NCX + p.x * NR;
-          const y = NCY - p.y * NR;
-          if (j === 0) nctx.moveTo(x, y);
-          else nctx.lineTo(x, y);
+      function pickColor(centerBias) {
+        // ближе к центру — теплее и светлее
+        const roll = Math.random();
+        if (centerBias > .55) {
+          if (roll < .45) return PALETTE[0].c;
+          if (roll < .80) return PALETTE[1].c;
+          return PALETTE[2].c;
         }
-        nctx.strokeStyle = `rgba(255,235,250,${fade * (.55 - k * .18)})`;
-        nctx.lineWidth = 2.2 - k * .6;
-        nctx.shadowColor = "rgba(255,120,190,.9)";
-        nctx.shadowBlur = NR * .05;
-        nctx.stroke();
+        let total = 0;
+        for (const p of PALETTE) total += p.w;
+        let r = Math.random() * total;
+        for (const p of PALETTE) {
+          r -= p.w;
+          if (r <= 0) return p.c;
+        }
+        return PALETTE[1].c;
       }
-      nctx.restore();
-    }
-  }
 
-  /* ── звёздное небо ── */
-  function drawStars(time){
-    const mxs = mx * W;
-    const mys = my * H;
-    const radius = 180;
+      /* ── спрайты свечения ── */
+      const spriteCache = new Map();
 
-    for (const s of stars){
-      const par = [6, 12, 22][s.layer];
-      let x = s.x * W + (mx - .5) * par;
-      let y = s.y * H + (my - .5) * par * .7;
-      let push = 0;
+      function glowSprite(rgb, hardness = .25) {
+        const key = rgb.join(",") + "|" + hardness;
+        if (spriteCache.has(key)) return spriteCache.get(key);
 
-      // звёзды мягко расступаются перед курсором
-      if (pointerSeen){
-        const dx = x - mxs;
-        const dy = y - mys;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < radius * radius){
-          const d = Math.sqrt(d2) || 1;
-          push = 1 - d / radius;
-          x += dx / d * push * 14;
-          y += dy / d * push * 14;
+        const size = 64;
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+        const g = c.getContext("2d");
+        const grd = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+        grd.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},1)`);
+        grd.addColorStop(hardness, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},.55)`);
+        grd.addColorStop(.65, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},.12)`);
+        grd.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
+        g.fillStyle = grd;
+        g.fillRect(0, 0, size, size);
+
+        spriteCache.set(key, c);
+        return c;
+      }
+
+      /* ── сердце ── */
+      function heartPoint(t) {
+        const x = Math.pow(Math.sin(t), 3);
+        const y = (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 16;
+        return { x, y };
+      }
+
+      function heartPath(c, cx, cy, s) {
+        c.beginPath();
+        const N = 280;
+        for (let i = 0; i <= N; i++) {
+          const p = heartPoint(i / N * TAU);
+          const px = cx + p.x * s;
+          const py = cy - p.y * s;
+          if (i === 0) c.moveTo(px, py);
+          else c.lineTo(px, py);
+        }
+        c.closePath();
+      }
+
+      /* ── рваный край: несколько гармоник по контуру ── */
+      const EDGE_SEEDS = [
+        { k: 1, amp: .026, phase: rand(0, TAU), speed: .06 },
+        { k: 2, amp: .018, phase: rand(0, TAU), speed: .10 },
+        { k: 3, amp: .014, phase: rand(0, TAU), speed: .14 },
+        { k: 5, amp: .012, phase: rand(0, TAU), speed: .19 },
+        { k: 8, amp: .010, phase: rand(0, TAU), speed: .25 },
+        { k: 13, amp: .008, phase: rand(0, TAU), speed: .32 },
+        { k: 21, amp: .006, phase: rand(0, TAU), speed: .40 },
+        { k: 34, amp: .004, phase: rand(0, TAU), speed: .50 }
+      ];
+
+      // глубокие «выгрызенные» впадины на краю
+      const EDGE_NOTCHES = [
+        { a: .55, w: .055, d: .055 },
+        { a: 2.15, w: .070, d: .080 },
+        { a: 3.55, w: .050, d: .050 },
+        { a: 5.15, w: .080, d: .090 }
+      ];
+
+      function edgeNoise(t, time) {
+        let d = 0;
+        for (const s of EDGE_SEEDS) {
+          d += Math.sin(t * s.k + s.phase + time * s.speed) * s.amp;
+        }
+        // верхние доли и нижний кончик рвутся сильнее
+        const env = .55 + .45 * Math.sin(t * 3 + .7);
+        d *= env;
+
+        for (const n of EDGE_NOTCHES) {
+          const diff = Math.atan2(Math.sin(t - n.a), Math.cos(t - n.a));
+          d -= n.d * Math.exp(-Math.pow(diff / n.w, 2));
+        }
+
+        return d;
+      }
+
+      function raggedPoint(t, time) {
+        const p = heartPoint(t);
+        const r = 1 + edgeNoise(t, time);
+        return { x: p.x * r, y: p.y * r };
+      }
+
+      function raggedHeartPath(c, cx, cy, s, time) {
+        c.beginPath();
+        const N = 300;
+        for (let i = 0; i <= N; i++) {
+          const p = raggedPoint(i / N * TAU, time);
+          const px = cx + p.x * s;
+          const py = cy - p.y * s;
+          if (i === 0) c.moveTo(px, py);
+          else c.lineTo(px, py);
+        }
+        c.closePath();
+      }
+
+      /* ── мягкое внешнее свечение (один раз на ресайз) ── */
+      function buildGlow() {
+        glowSize = NSIZE * 1.5;
+        glowCv = document.createElement("canvas");
+        glowCv.width = Math.round(glowSize * dpr);
+        glowCv.height = Math.round(glowSize * dpr);
+
+        const g = glowCv.getContext("2d");
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const cx = glowSize / 2;
+        const cy = glowSize / 2 - R * .155;
+
+        const grd = g.createRadialGradient(cx, cy - R * .15, R * .08, cx, cy, R * 1.22);
+        grd.addColorStop(0, "rgba(255,95,160,.42)");
+        grd.addColorStop(.42, "rgba(205,60,225,.26)");
+        grd.addColorStop(.78, "rgba(115,55,235,.12)");
+        grd.addColorStop(1, "rgba(60,20,140,0)");
+
+        g.fillStyle = grd;
+        g.filter = `blur(${Math.max(12, Math.round(R * .17))}px)`;
+        raggedHeartPath(g, cx, cy, R * 1.01, 0);
+        g.fill();
+        g.filter = "none";
+      }
+
+      /* ── частицы туманности ── */
+      function buildParticles() {
+        const count = W < 640 ? 1500 : 3200;
+        particles = [];
+
+        for (let i = 0; i < count; i++) {
+          const t = Math.random() * TAU;
+          const edge = heartPoint(t);
+
+          // радиальный коэффициент: ближе к краю — плотнее
+          let k;
+          if (i < count * .18) {
+            k = rand(.90, 1.0);
+          } else {
+            k = Math.pow(Math.random(), .58);
+          }
+
+          // лёгкое дрожание внутри
+          const jx = rand(-.014, .014);
+          const jy = rand(-.014, .014);
+
+          const x = edge.x * k + jx;
+          const y = edge.y * k + jy;
+          const centerBias = 1 - k;
+
+          particles.push({
+            x, y,
+            k,
+            rgb: pickNebulaColor(x, centerBias),
+            size: rand(.8, 2.8) * Math.max(.75, NR / 240),
+            alpha: rand(.25, .82) * (1 - k * .18),
+            phase: Math.random() * TAU,
+            tw: rand(.35, 1.6),
+            drift: rand(.15, .55),
+            dir: Math.random() < .5 ? -1 : 1
+          });
         }
       }
 
-      const tw = reduceMotion ? 1 : (.62 + .38 * Math.sin(time * s.sp + s.ph));
+      /* ── облака туманности ── */
+      function buildClouds() {
+        clouds = [];
+        const total = W < 640 ? 32 : 48;
 
-      ctx.globalAlpha = Math.min(1, s.a * tw * (1 + push * 1.2));
-      ctx.fillStyle = `rgb(${s.rgb[0]},${s.rgb[1]},${s.rgb[2]})`;
-      ctx.beginPath();
-      ctx.arc(x, y, s.r, 0, TAU);
-      ctx.fill();
+        for (let i = 0; i < total; i++) {
+          const t = Math.random() * TAU;
+          const edge = heartPoint(t);
+          const k = rand(.08, .78);
+          const x = edge.x * k;
+          const y = edge.y * k;
 
-      // крестик у самых ярких
-      if (s.layer === 2 && s.r > 1.15){
-        ctx.globalAlpha = Math.min(1, s.a * tw * .35 * (1 + push));
-        ctx.strokeStyle = `rgb(${s.rgb[0]},${s.rgb[1]},${s.rgb[2]})`;
-        ctx.lineWidth = .7;
-        const len = s.r * 3.2;
-        ctx.beginPath();
-        ctx.moveTo(x - len, y); ctx.lineTo(x + len, y);
-        ctx.moveTo(x, y - len); ctx.lineTo(x, y + len);
-        ctx.stroke();
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
+          clouds.push({
+            x, y,
+            size: NR * rand(.55, 1.35),
+            alpha: rand(.12, .30),
+            phase: Math.random() * TAU,
+            speed: rand(.08, .22),
+            rgb: pickNebulaColor(x, 1 - k),
+            squash: rand(.55, 1)
+          });
+        }
 
-  /* ── падающие звёзды ── */
-  function spawnMeteor(now){
-    const startX = rand(W * .1, W * .85);
-    const startY = rand(0, H * .3);
-    const angle = rand(.18, .34);
-    const speed = rand(340, 620);
+        // мелкая клочковатая структура
+        for (let i = 0; i < (W < 640 ? 110 : 190); i++) {
+          const t = Math.random() * TAU;
+          const edge = heartPoint(t);
+          const k = Math.pow(Math.random(), .72);
+          const x = edge.x * k;
+          const y = edge.y * k;
 
-    meteors.push({
-      x: startX, y: startY,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 0,
-      max: rand(.8, 1.5)
-    });
-
-    lastMeteor = now;
-    nextMeteor = rand(2800, 7500);
-  }
-
-  function drawMeteors(dt, now){
-    if (!reduceMotion && now - lastMeteor > nextMeteor) spawnMeteor(now);
-
-    for (let i = meteors.length - 1; i >= 0; i--){
-      const m = meteors[i];
-      m.life += dt;
-      m.x += m.vx * dt;
-      m.y += m.vy * dt;
-
-      if (m.life > m.max || m.x > W + 200 || m.y > H + 200){
-        meteors.splice(i, 1);
-        continue;
+          clouds.push({
+            x, y,
+            size: NR * rand(.08, .32),
+            alpha: rand(.07, .20),
+            phase: Math.random() * TAU,
+            speed: rand(.12, .35),
+            rgb: pickNebulaColor(x, 1 - k),
+            squash: rand(.45, 1)
+          });
+        }
       }
 
-      const fade = Math.sin(clamp01(m.life / m.max) * Math.PI);
-      const tailX = m.x - m.vx * .13;
-      const tailY = m.y - m.vy * .13;
-
-      const g = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
-      g.addColorStop(0, `rgba(255,255,255,${.85 * fade})`);
-      g.addColorStop(.35, `rgba(200,225,255,${.35 * fade})`);
-      g.addColorStop(1, "rgba(160,200,255,0)");
-
-      ctx.strokeStyle = g;
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(m.x, m.y);
-      ctx.lineTo(tailX, tailY);
-      ctx.stroke();
-
-      ctx.globalAlpha = .8 * fade;
-      ctx.drawImage(glowSprite([255, 255, 255], .1), m.x - 6, m.y - 6, 12, 12);
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  /* ── вспышка при открытии ── */
-  function spawnShockwaves(){
-    const far = Math.hypot(W, H) * .72;
-    const now = performance.now();
-    const ox = heartCX;
-    const oy = heartCY;
-
-    for (let i = 0; i < 3; i++){
-      shockwaves.push({
-        x: ox,
-        y: oy,
-        start: now + i * 170,
-        r0: R * (.52 + i * .05),
-        r1: far * (1 - i * .09),
-        dur: 2100 + i * 280,
-        width: 2.4 - i * .5,
-        alpha: .52 - i * .11
-      });
-    }
-  }
-
-  function drawShockwaves(now){
-    for (let i = shockwaves.length - 1; i >= 0; i--){
-      const s = shockwaves[i];
-      const u = (now - s.start) / s.dur;
-
-      if (u < 0) continue;
-      if (u > 1){ shockwaves.splice(i, 1); continue; }
-
-      const e = easeOutCubic(u);
-      const r = s.r0 + (s.r1 - s.r0) * e;
-      const a = s.alpha * Math.pow(1 - u, 2);
-
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.strokeStyle = `rgba(255,150,210,${a})`;
-      ctx.lineWidth = s.width * (1 - u) + .4;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, r, 0, TAU);
-      ctx.stroke();
-
-      ctx.strokeStyle = `rgba(175,120,255,${a * .4})`;
-      ctx.lineWidth = s.width * 2.4 * (1 - u) + 1;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, r * .985, 0, TAU);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-
-  /* ── звёздный ветер из сердца ── */
-  function spawnWind(count, scale = 1){
-    const now = performance.now() / 1000;
-
-    for (let i = 0; i < count; i++){
-      if (wind.length >= 190) break;
-
-      const t = Math.random() * TAU;
-      const p = raggedPoint(t, now);
-      const plen = Math.hypot(p.x, p.y) || 1;
-      const nx = p.x / plen;
-      const ny = -p.y / plen;
-      const sp = rand(10, 68) * (.6 + scale * .4);
-
-      wind.push({
-        x: heartCX + p.x * R * scale * .94,
-        y: heartCY - p.y * R * scale * .94,
-        vx: nx * sp + rand(-9, 9),
-        vy: ny * sp + rand(-9, 9),
-        life: 0,
-        max: rand(1.6, 4.4),
-        size: rand(.8, 2.8),
-        rgb: Math.random() < .55 ? pickNebulaColor(p.x, .5) : [255, 228, 246]
-      });
-    }
-  }
-
-  function drawWind(dt){
-    if (!wind.length) return;
-
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-
-    for (let i = wind.length - 1; i >= 0; i--){
-      const p = wind[i];
-      p.life += dt;
-      if (p.life > p.max){ wind.splice(i, 1); continue; }
-
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vx *= .992;
-      p.vy *= .992;
-
-      const u = p.life / p.max;
-      const a = Math.sin(Math.min(1, u) * Math.PI) * .5;
-      const s = p.size * (1 + u * 2.2);
-
-      ctx.globalAlpha = a;
-      ctx.drawImage(glowSprite(p.rgb, .1), p.x - s/2, p.y - s/2, s, s);
-    }
-
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
-
-  /* ── звёздная пыль за курсором ── */
-  const TRAIL_COLORS = [[255,255,255],[255,170,210],[160,220,255],[205,150,255]];
-
-  function spawnTrail(x, y){
-    if (trail.length >= 180) return;
-
-    const n = Math.random() < .55 ? 3 : 2;
-    for (let i = 0; i < n; i++){
-      trail.push({
-        x: x + rand(-5, 5),
-        y: y + rand(-5, 5),
-        vx: rand(-20, 20),
-        vy: rand(-24, 10),
-        life: 0,
-        max: rand(1.0, 2.2),
-        size: rand(1.6, 4.5),
-        rgb: TRAIL_COLORS[(Math.random() * TRAIL_COLORS.length) | 0]
-      });
-    }
-  }
-
-  function drawTrail(dt){
-    if (!trail.length) return;
-
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-
-    for (let i = trail.length - 1; i >= 0; i--){
-      const p = trail[i];
-      p.life += dt;
-      if (p.life > p.max){ trail.splice(i, 1); continue; }
-
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vx *= .97;
-      p.vy = p.vy * .97 + 10 * dt;
-
-      const u = p.life / p.max;
-      const a = (1 - u) * (1 - u) * .95;
-      const s = p.size * (1 + u * 1.8);
-
-      ctx.globalAlpha = a;
-      ctx.drawImage(glowSprite(p.rgb, .08), p.x - s/2, p.y - s/2, s, s);
-    }
-
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
-
-  function drawCursorGlow(){
-    if (!pointerSeen || reduceMotion) return;
-
-    const x = mx * W;
-    const y = my * H;
-    const g = ctx.createRadialGradient(x, y, 0, x, y, 120);
-    g.addColorStop(0, "rgba(255,190,225,.07)");
-    g.addColorStop(.5, "rgba(180,120,255,.035)");
-    g.addColorStop(1, "rgba(0,0,0,0)");
-
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-    ctx.fillStyle = g;
-    ctx.fillRect(x - 120, y - 120, 240, 240);
-    ctx.restore();
-  }
-
-  /* ── вспышка при открытии ── */
-  function burstAt(x, y){
-    for (let i = 0; i < 160; i++){
-      const a = Math.random() * TAU;
-      const sp = rand(40, 380);
-      burst.push({
-        x, y,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp,
-        life: 0,
-        max: rand(.9, 2.1),
-        size: rand(1.2, 4.6),
-        rgb: Math.random() < .5 ? [255, 170, 210] : (Math.random() < .6 ? [255, 255, 255] : [190, 120, 255])
-      });
-    }
-  }
-
-  function drawBurst(dt){
-    if (!burst.length) return;
-
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-
-    for (let i = burst.length - 1; i >= 0; i--){
-      const p = burst[i];
-      p.life += dt;
-      if (p.life > p.max){
-        burst.splice(i, 1);
-        continue;
+      function buildDust() {
+        dust = [];
+        for (let i = 0; i < (W < 640 ? 12 : 18); i++) {
+          const t = Math.random() * TAU;
+          const edge = heartPoint(t);
+          const k = rand(.12, .75);
+          dust.push({
+            x: edge.x * k,
+            y: edge.y * k,
+            size: NR * rand(.32, .92),
+            alpha: rand(.14, .32),
+            phase: Math.random() * TAU,
+            speed: rand(.06, .16),
+            squash: rand(.18, .55),
+            rot: Math.random() * TAU
+          });
+        }
       }
 
-      p.vx *= .985;
-      p.vy = p.vy * .985 + 26 * dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
+      /* ── рваные клочья по краю ── */
+      function buildTufts() {
+        tufts = [];
+        const total = W < 640 ? 64 : 120;
 
-      const fade = 1 - p.life / p.max;
-      const s = p.size * (1 + p.life * 1.4);
-      ctx.globalAlpha = fade * .8;
-      ctx.drawImage(glowSprite(p.rgb), p.x - s/2, p.y - s/2, s, s);
-    }
+        for (let i = 0; i < total; i++) {
+          const t = Math.random() * TAU;
+          const big = Math.random() < .30;
+          const p = heartPoint(t);
 
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
+          tufts.push({
+            t,
+            size: NR * (big ? rand(.20, .50) : rand(.04, .14)),
+            alpha: big ? rand(.05, .12) : rand(.08, .20),
+            offset: big ? rand(1.00, 1.16) : rand(.98, 1.07),
+            squash: rand(.28, .9),
+            rgb: pickNebulaColor(p.x, .4),
+            phase: Math.random() * TAU,
+            speed: rand(.1, .35)
+          });
+        }
+      }
 
-  /* ── сердцебиение ── */
-  /* ── яркая звезда в сердце туманности ── */
-  function drawCore(time, beat, hx, hy){
-    const boost = opened ? Math.exp(-(performance.now() - openedAt) / 1000 * 1.4) : 0;
-    const cx = hx;
-    const cy = hy - NR * .07;
-    const pulse = .9 + .1 * Math.sin(time * 1.6) + .22 * beat + .35 * boost;
-    const s = NR * .19 * pulse;
+      /* ── длинные пряди, уходящие наружу ── */
+      function buildTendrils() {
+        tendrils = [];
+        const total = W < 640 ? 22 : 40;
 
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < total; i++) {
+          const t = Math.random() * TAU;
+          const p = heartPoint(t);
 
-    ctx.globalAlpha = (.85 + .15 * boost) * revealEase;
-    ctx.drawImage(glowSprite([255, 240, 250], .12), cx - s/2, cy - s/2, s, s);
+          tendrils.push({
+            t,
+            len: rand(.12, .42),
+            curve: rand(-.55, .55),
+            width: rand(1.5, 4.0),
+            alpha: rand(.14, .38),
+            rgb: pickNebulaColor(p.x, .4),
+            phase: Math.random() * TAU,
+            speed: rand(.2, .6),
+            tip: Math.random() < .35
+          });
+        }
+      }
 
-    const len = NR * .5 * pulse;
+      /* ── тонкие газовые волокна внутри ── */
+      function buildFilaments() {
+        filaments = [];
+        const total = W < 640 ? 9 : 14;
 
-    const horiz = ctx.createLinearGradient(cx - len, cy, cx + len, cy);
-    horiz.addColorStop(0, "rgba(255,200,230,0)");
-    horiz.addColorStop(.5, "rgba(255,255,255,.92)");
-    horiz.addColorStop(1, "rgba(255,200,230,0)");
+        for (let i = 0; i < total; i++) {
+          filaments.push({
+            start: Math.random() * TAU,
+            arc: rand(.05, .18),
+            k: rand(.40, .90),
+            wave: rand(.03, .10),
+            width: rand(.7, 1.5),
+            alpha: rand(.05, .13),
+            rgb: pickNebulaColor(rand(-.8, .8), .5),
+            phase: Math.random() * TAU,
+            speed: rand(.1, .3)
+          });
+        }
+      }
 
-    const vert = ctx.createLinearGradient(cx, cy - len, cx, cy + len);
-    vert.addColorStop(0, "rgba(210,190,255,0)");
-    vert.addColorStop(.5, "rgba(255,255,255,.8)");
-    vert.addColorStop(1, "rgba(210,190,255,0)");
+      /* ── звёздные сгустки внутри туманности ── */
+      function buildKnots() {
+        knots = [];
+        const total = W < 640 ? 14 : 24;
 
-    ctx.globalAlpha = .45 * revealEase;
-    ctx.lineWidth = 1.1;
-    ctx.strokeStyle = horiz;
-    ctx.beginPath();
-    ctx.moveTo(cx - len, cy);
-    ctx.lineTo(cx + len, cy);
-    ctx.stroke();
+        for (let i = 0; i < total; i++) {
+          const t = Math.random() * TAU;
+          const p = heartPoint(t);
+          const k = Math.pow(Math.random(), .7) * .9;
+          const x = p.x * k;
+          const y = p.y * k;
 
-    ctx.strokeStyle = vert;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - len);
-    ctx.lineTo(cx, cy + len);
-    ctx.stroke();
+          knots.push({
+            x, y,
+            size: NR * rand(.015, .05),
+            alpha: rand(.45, .95),
+            rgb: Math.random() < .5 ? [255, 245, 250] : pickNebulaColor(x, .6),
+            phase: Math.random() * TAU,
+            tw: rand(.5, 1.8),
+            flare: Math.random() < .35
+          });
+        }
+      }
 
-    // короткие диагональные лучи
-    const d = len * .42;
-    const diag = ctx.createLinearGradient(cx - d, cy - d, cx + d, cy + d);
-    diag.addColorStop(0, "rgba(255,220,245,0)");
-    diag.addColorStop(.5, "rgba(255,240,255,.55)");
-    diag.addColorStop(1, "rgba(255,220,245,0)");
+      /* ── куски, выгрызенные из края ── */
+      function buildBites() {
+        bites = [];
+        const total = W < 640 ? 16 : 24;
 
-    ctx.globalAlpha = .28 * revealEase;
-    ctx.strokeStyle = diag;
-    ctx.beginPath();
-    ctx.moveTo(cx - d, cy - d);
-    ctx.lineTo(cx + d, cy + d);
-    ctx.moveTo(cx + d, cy - d);
-    ctx.lineTo(cx - d, cy + d);
-    ctx.stroke();
+        for (let i = 0; i < total; i++) {
+          bites.push({
+            t: Math.random() * TAU,
+            k: rand(.95, 1.07),
+            size: NR * rand(.09, .24),
+            alpha: rand(.26, .52),
+            squash: rand(.30, 1),
+            rot: Math.random() * TAU,
+            phase: Math.random() * TAU,
+            speed: rand(.05, .2)
+          });
+        }
+      }
 
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
+      /* ── звёзды ── */
+      function buildStars() {
+        stars = [];
+        const n = Math.min(560, Math.round(W * H / 2000));
 
-  function heartbeat(t){
-    const period = 2.35;
-    const p = ((((t - beatOffset) % period) + period) % period) / period;
-    const b1 = Math.exp(-Math.pow((p - .03) / .045, 2));
-    const b2 = .62 * Math.exp(-Math.pow((p - .19) / .055, 2));
-    return b1 + b2;
-  }
+        for (let i = 0; i < n; i++) {
+          const layer = Math.random() < .62 ? 0 : (Math.random() < .72 ? 1 : 2);
+          const baseR = [.45, .8, 1.35][layer];
+          const baseA = [.22, .40, .72][layer];
+          const colorRoll = Math.random();
+          let rgb;
+          if (colorRoll < .72) rgb = [255, 255, 255];
+          else if (colorRoll < .84) rgb = [200, 225, 255];
+          else if (colorRoll < .94) rgb = [255, 205, 225];
+          else rgb = [255, 230, 190];
 
-  /* ── главный цикл ── */
-  let prev = performance.now();
+          stars.push({
+            x: Math.random(),
+            y: Math.random(),
+            r: baseR * rand(.6, 1.4),
+            a: baseA * rand(.55, 1),
+            ph: Math.random() * TAU,
+            sp: rand(.35, 1.5),
+            rgb,
+            layer
+          });
+        }
+      }
 
-  function frame(now){
-    const dt = Math.min(.05, (now - prev) / 1000);
-    prev = now;
-    const time = now / 1000;
+      /* ── размеры и перестройка ── */
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth < 640 ? 1.75 : 2);
+        W = window.innerWidth;
+        H = window.innerHeight;
 
-    mx += (tmx - mx) * .045;
-    my += (tmy - my) * .045;
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const sinceOpen = opened ? (now - openedAt) / 1000 : 0;
+        const short = H < 540;
+        const rH = H > 800 ? .29 : .265;
+        const rW = W < 640 ? .40 : .34;
+        R = Math.min(W * (short ? .30 : rW), H * (short ? .21 : rH));
+        heartCX = W / 2;
+        heartCY = H * (short ? .34 : .375);
 
-    if (opened){
-      reveal = clamp01((now - revealStart) / 2200);
-      revealEase = easeOutCubic(reveal);
-    }
+        buildStars();
+        buildNebulaCanvas();
+        lastMeteor = performance.now();
+      }
 
-    const beat = reduceMotion ? 0 : heartbeat(time);
-    const awaken = opened ? Math.exp(-sinceOpen * 1.35) : 0;
-    const kick = opened ? awaken * Math.sin(sinceOpen * 10.5) * .055 : 0;
-    const heartScale = Math.max(.72, Math.min(1.16,
-      (0.86 + .14 * easeOutBack(reveal)) * (1 + .028 * beat + kick)
-    ));
+      function buildNebulaCanvas() {
+        NSIZE = Math.ceil(R * 2.8);
+        neb = document.createElement("canvas");
+        neb.width = Math.round(NSIZE * dpr);
+        neb.height = Math.round(NSIZE * dpr);
+        nctx = neb.getContext("2d");
+        nctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const hx = heartCX;
-    const hy = heartCY;
-    const tilt = 0;
+        NCX = NSIZE / 2;
+        NCY = NSIZE / 2 - R * .155; // центрируем визуальный центр сердца
+        NR = R;
 
-    ctx.clearRect(0, 0, W, H);
+        buildParticles();
+        buildClouds();
+        buildDust();
+        buildTufts();
+        buildTendrils();
+        buildFilaments();
+        buildKnots();
+        buildBites();
+        buildGlow();
+      }
 
-    drawStars(time);
-    drawMeteors(dt, now);
-    drawWind(dt);
+      /* ── отрисовка туманности в офскрин ── */
+      function drawNebula(time, sinceOpen) {
+        nctx.clearRect(0, 0, NSIZE, NSIZE);
+        nctx.save();
+        raggedHeartPath(nctx, NCX, NCY, NR, time);
+        nctx.clip();
 
-    // ореол вокруг сердца
-    if (revealEase > 0){
-      const halo = ctx.createRadialGradient(
-        hx, hy, NR * .15,
-        hx, hy, NR * 2.05
-      );
-      halo.addColorStop(0, `rgba(255,70,140,${.13 * revealEase})`);
-      halo.addColorStop(.45, `rgba(160,70,255,${.07 * revealEase})`);
-      halo.addColorStop(1, "rgba(0,0,0,0)");
+        const mox = 0;
+        const moy = 0;
 
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = halo;
-      ctx.fillRect(0, 0, W, H);
-      ctx.restore();
-    }
+        // плотная основа — силуэт сердца
+        const base = nctx.createRadialGradient(
+          NCX + mox * .4, NCY - NR * .12 + moy * .4, NR * .05,
+          NCX + mox * .2, NCY + moy * .2, NR * 1.18
+        );
+        base.addColorStop(0, "rgba(145,48,132,.34)");
+        base.addColorStop(.42, "rgba(88,30,136,.25)");
+        base.addColorStop(.78, "rgba(45,16,90,.14)");
+        base.addColorStop(1, "rgba(25,8,55,.055)");
+        nctx.globalCompositeOperation = "source-over";
+        nctx.globalAlpha = 1;
+        nctx.fillStyle = base;
+        nctx.fillRect(0, 0, NSIZE, NSIZE);
 
-    if (revealEase > 0){
-      // мягкое облако свечения позади сердца
-      if (glowCv){
-        const gs = glowSize * (1 + .02 * beat) * (0.92 + .08 * revealEase);
+        // цветовой перекос: слева холоднее, справа теплее
+        const side = nctx.createLinearGradient(NCX - NR, NCY, NCX + NR, NCY);
+        side.addColorStop(0, "rgba(60,45,170,.10)");
+        side.addColorStop(.5, "rgba(120,25,95,.05)");
+        side.addColorStop(1, "rgba(255,70,130,.11)");
+        nctx.fillStyle = side;
+        nctx.fillRect(0, 0, NSIZE, NSIZE);
+
+        // облака
+        nctx.globalCompositeOperation = "lighter";
+        for (const c of clouds) {
+          const breathe = .82 + .18 * Math.sin(time * c.speed + c.phase);
+          const s = c.size * (1 + .025 * Math.sin(time * .18 + c.phase));
+          const x = NCX + c.x * NR + Math.sin(time * .12 + c.phase) * NR * .012 + mox * .7;
+          const y = NCY - c.y * NR + Math.cos(time * .10 + c.phase) * NR * .012 + moy * .7;
+
+          nctx.globalAlpha = c.alpha * breathe;
+          nctx.drawImage(glowSprite(c.rgb, .18), x - s / 2, y - s * c.squash / 2, s, s * c.squash);
+        }
+
+        // пыль — вырезаем мягкие дыры
+        nctx.globalCompositeOperation = "destination-out";
+        for (const d of dust) {
+          const s = d.size * (1 + .05 * Math.sin(time * d.speed + d.phase));
+          const x = NCX + d.x * NR + mox * .5;
+          const y = NCY - d.y * NR + moy * .5;
+
+          nctx.save();
+          nctx.globalAlpha = d.alpha;
+          nctx.translate(x, y);
+          nctx.rotate(d.rot + time * d.speed * .08);
+          nctx.scale(1, d.squash);
+          nctx.drawImage(glowSprite([255, 255, 255], .05), -s / 2, -s / 2, s, s);
+          nctx.restore();
+        }
+
+        // частицы
+        nctx.globalCompositeOperation = "lighter";
+        for (const p of particles) {
+          const tw = .55 + .45 * Math.sin(time * p.tw + p.phase);
+          const drift = Math.sin(time * p.drift + p.phase) * NR * .004;
+          const s = p.size * (.75 + .45 * tw);
+          const depth = .35 + .65 * p.k;
+
+          nctx.globalAlpha = p.alpha * tw;
+          nctx.drawImage(
+            glowSprite(p.rgb),
+            NCX + p.x * NR + drift + mox * depth - s / 2,
+            NCY - p.y * NR + drift * .6 + moy * depth - s / 2,
+            s, s
+          );
+        }
+
+        // рваные выгрызенные куски по краю
+        nctx.globalCompositeOperation = "destination-out";
+        for (const b of bites) {
+          const p = raggedPoint(b.t, time);
+          const x = NCX + p.x * NR * b.k + mox * .5;
+          const y = NCY - p.y * NR * b.k + moy * .5;
+          const s = b.size * (1 + .1 * Math.sin(time * b.speed + b.phase));
+
+          nctx.save();
+          nctx.globalAlpha = b.alpha;
+          nctx.translate(x, y);
+          nctx.rotate(b.rot + time * b.speed * .1);
+          nctx.scale(1, b.squash);
+          nctx.drawImage(glowSprite([255, 255, 255], .02), -s / 2, -s / 2, s, s);
+          nctx.restore();
+        }
+
+        // тонкие волокна газа
+        nctx.globalCompositeOperation = "lighter";
+        nctx.lineCap = "round";
+        for (const f of filaments) {
+          nctx.beginPath();
+          for (let j = 0; j <= 30; j++) {
+            const u = j / 30;
+            const t = f.start + f.arc * TAU * u;
+            const p = raggedPoint(t, time);
+            const k = f.k + Math.sin(u * Math.PI * 2 + f.phase + time * f.speed) * f.wave;
+            const x = NCX + p.x * NR * k + mox * .5;
+            const y = NCY - p.y * NR * k + moy * .5;
+            if (j === 0) nctx.moveTo(x, y);
+            else nctx.lineTo(x, y);
+          }
+          nctx.strokeStyle = `rgba(${f.rgb[0]},${f.rgb[1]},${f.rgb[2]},${f.alpha})`;
+          nctx.lineWidth = f.width;
+          nctx.stroke();
+        }
+
+        // звёздные сгустки
+        for (const s of knots) {
+          const tw = .65 + .35 * Math.sin(time * s.tw + s.phase);
+          const size = s.size * (1 + .25 * tw);
+          const x = NCX + s.x * NR + mox * .6;
+          const y = NCY - s.y * NR + moy * .6;
+
+          nctx.globalAlpha = s.alpha * tw;
+          nctx.drawImage(glowSprite(s.rgb, .08), x - size / 2, y - size / 2, size, size);
+
+          if (s.flare) {
+            nctx.globalAlpha = s.alpha * tw * .55;
+            nctx.strokeStyle = `rgba(${s.rgb[0]},${s.rgb[1]},${s.rgb[2]},.7)`;
+            nctx.lineWidth = .6;
+            const l = size * 4;
+            nctx.beginPath();
+            nctx.moveTo(x - l, y); nctx.lineTo(x + l, y);
+            nctx.moveTo(x, y - l); nctx.lineTo(x, y + l);
+            nctx.stroke();
+          }
+        }
+        nctx.globalAlpha = 1;
+
+        nctx.restore();
+
+        // пряди, уходящие за край сердца
+        nctx.save();
+        nctx.globalCompositeOperation = "lighter";
+        nctx.lineCap = "round";
+        for (const d of tendrils) {
+          const p = raggedPoint(d.t, time);
+          const len = d.len * (1 + .08 * Math.sin(time * d.speed + d.phase));
+          const plen = Math.hypot(p.x, p.y) || 1;
+          const nx = p.x / plen, ny = p.y / plen;
+          const tx = -ny, ty = nx;
+          const N = 10;
+          let prevX = 0, prevY = 0;
+
+          for (let j = 0; j <= N; j++) {
+            const u = j / N;
+            const r = 1 + len * u;
+            const lat = Math.sin(u * Math.PI) * d.curve * len;
+            const hx = p.x * r + tx * lat + mox * .35;
+            const hy = p.y * r + ty * lat + moy * .35;
+            const x = NCX + hx * NR;
+            const y = NCY - hy * NR;
+
+            if (j === 0) { prevX = x; prevY = y; continue; }
+            nctx.strokeStyle = `rgba(${d.rgb[0]},${d.rgb[1]},${d.rgb[2]},${d.alpha * (1 - u * .72)})`;
+            nctx.lineWidth = d.width * (1 - u * .65);
+            nctx.beginPath();
+            nctx.moveTo(prevX, prevY);
+            nctx.lineTo(x, y);
+            nctx.stroke();
+            prevX = x; prevY = y;
+          }
+
+          if (d.tip) {
+            const s = d.width * 3.5;
+            nctx.globalAlpha = d.alpha * .8;
+            nctx.drawImage(glowSprite(d.rgb, .1), prevX - s / 2, prevY - s / 2, s, s);
+          }
+        }
+
+        // мягкие клочья снаружи
+        for (const f of tufts) {
+          const p = raggedPoint(f.t, time);
+          const x = NCX + p.x * NR * f.offset + mox * .5;
+          const y = NCY - p.y * NR * f.offset + moy * .5;
+          const s = f.size * (1 + .08 * Math.sin(time * f.speed + f.phase));
+
+          nctx.globalAlpha = f.alpha * (.7 + .3 * Math.sin(time * f.speed * 1.3 + f.phase));
+          nctx.drawImage(glowSprite(f.rgb, .12), x - s / 2, y - s * f.squash / 2, s, s * f.squash);
+        }
+        nctx.restore();
+        nctx.globalAlpha = 1;
+
+        // светящийся контур
+        nctx.save();
+        nctx.globalCompositeOperation = "lighter";
+        nctx.globalAlpha = .06;
+        nctx.strokeStyle = "rgba(255,150,200,.45)";
+        nctx.lineWidth = Math.max(.8, NR / 240);
+        nctx.shadowColor = "rgba(255,80,150,.9)";
+        nctx.shadowBlur = NR * .04;
+        raggedHeartPath(nctx, NCX, NCY, NR, time);
+        nctx.stroke();
+        nctx.restore();
+
+        // яркие неровные дуги по контуру
+        nctx.save();
+        nctx.globalCompositeOperation = "lighter";
+        nctx.lineCap = "round";
+        const arcs = 12;
+        for (let i = 0; i < arcs; i++) {
+          const start = i / arcs * TAU + .35;
+          const span = .04 + .05 * Math.sin(i * 2.3 + 1.1);
+          nctx.beginPath();
+          for (let j = 0; j <= 12; j++) {
+            const t = start + span * TAU * (j / 12);
+            const p = raggedPoint(t, time);
+            const x = NCX + p.x * NR;
+            const y = NCY - p.y * NR;
+            if (j === 0) nctx.moveTo(x, y);
+            else nctx.lineTo(x, y);
+          }
+          nctx.strokeStyle = `rgba(255,195,230,${.10 + .12 * Math.abs(Math.sin(i * 1.7 + time * .3))})`;
+          nctx.lineWidth = 1.0 + .8 * Math.abs(Math.sin(i * 2.1));
+          nctx.stroke();
+        }
+        nctx.restore();
+
+        // энергия, бегущая по краю после открытия
+        if (opened && sinceOpen < 3.4) {
+          const fade = Math.exp(-sinceOpen * 1.15) * Math.min(1, sinceOpen * 7);
+          const head = (sinceOpen * .62) % 1;
+
+          nctx.save();
+          nctx.globalCompositeOperation = "lighter";
+          nctx.lineCap = "round";
+
+          for (let k = 0; k < 2; k++) {
+            const h = (head - k * .035 + 1) % 1;
+            const span = .13;
+            nctx.beginPath();
+            for (let j = 0; j <= 20; j++) {
+              const t = (h + span * (j / 20)) * TAU;
+              const p = raggedPoint(t, time);
+              const x = NCX + p.x * NR;
+              const y = NCY - p.y * NR;
+              if (j === 0) nctx.moveTo(x, y);
+              else nctx.lineTo(x, y);
+            }
+            nctx.strokeStyle = `rgba(255,235,250,${fade * (.55 - k * .18)})`;
+            nctx.lineWidth = 2.2 - k * .6;
+            nctx.shadowColor = "rgba(255,120,190,.9)";
+            nctx.shadowBlur = NR * .05;
+            nctx.stroke();
+          }
+          nctx.restore();
+        }
+      }
+
+      /* ── звёздное небо ── */
+      function drawStars(time) {
+        const mxs = mx * W;
+        const mys = my * H;
+        const radius = 180;
+
+        for (const s of stars) {
+          const par = [6, 12, 22][s.layer];
+          let x = s.x * W + (mx - .5) * par;
+          let y = s.y * H + (my - .5) * par * .7;
+          let push = 0;
+
+          // звёзды мягко расступаются перед курсором
+          if (pointerSeen) {
+            const dx = x - mxs;
+            const dy = y - mys;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < radius * radius) {
+              const d = Math.sqrt(d2) || 1;
+              push = 1 - d / radius;
+              x += dx / d * push * 14;
+              y += dy / d * push * 14;
+            }
+          }
+
+          const tw = reduceMotion ? 1 : (.62 + .38 * Math.sin(time * s.sp + s.ph));
+
+          ctx.globalAlpha = Math.min(1, s.a * tw * (1 + push * 1.2));
+          ctx.fillStyle = `rgb(${s.rgb[0]},${s.rgb[1]},${s.rgb[2]})`;
+          ctx.beginPath();
+          ctx.arc(x, y, s.r, 0, TAU);
+          ctx.fill();
+
+          // крестик у самых ярких
+          if (s.layer === 2 && s.r > 1.15) {
+            ctx.globalAlpha = Math.min(1, s.a * tw * .35 * (1 + push));
+            ctx.strokeStyle = `rgb(${s.rgb[0]},${s.rgb[1]},${s.rgb[2]})`;
+            ctx.lineWidth = .7;
+            const len = s.r * 3.2;
+            ctx.beginPath();
+            ctx.moveTo(x - len, y); ctx.lineTo(x + len, y);
+            ctx.moveTo(x, y - len); ctx.lineTo(x, y + len);
+            ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      /* ── падающие звёзды ── */
+      function spawnMeteor(now) {
+        const startX = rand(W * .1, W * .85);
+        const startY = rand(0, H * .3);
+        const angle = rand(.18, .34);
+        const speed = rand(340, 620);
+
+        meteors.push({
+          x: startX, y: startY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 0,
+          max: rand(.8, 1.5)
+        });
+
+        lastMeteor = now;
+        nextMeteor = rand(2800, 7500);
+      }
+
+      function drawMeteors(dt, now) {
+        if (!reduceMotion && now - lastMeteor > nextMeteor) spawnMeteor(now);
+
+        for (let i = meteors.length - 1; i >= 0; i--) {
+          const m = meteors[i];
+          m.life += dt;
+          m.x += m.vx * dt;
+          m.y += m.vy * dt;
+
+          if (m.life > m.max || m.x > W + 200 || m.y > H + 200) {
+            meteors.splice(i, 1);
+            continue;
+          }
+
+          const fade = Math.sin(clamp01(m.life / m.max) * Math.PI);
+          const tailX = m.x - m.vx * .13;
+          const tailY = m.y - m.vy * .13;
+
+          const g = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
+          g.addColorStop(0, `rgba(255,255,255,${.85 * fade})`);
+          g.addColorStop(.35, `rgba(200,225,255,${.35 * fade})`);
+          g.addColorStop(1, "rgba(160,200,255,0)");
+
+          ctx.strokeStyle = g;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(m.x, m.y);
+          ctx.lineTo(tailX, tailY);
+          ctx.stroke();
+
+          ctx.globalAlpha = .8 * fade;
+          ctx.drawImage(glowSprite([255, 255, 255], .1), m.x - 6, m.y - 6, 12, 12);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      /* ── вспышка при открытии ── */
+      function spawnShockwaves() {
+        const far = Math.hypot(W, H) * .72;
+        const now = performance.now();
+        const ox = heartCX;
+        const oy = heartCY;
+
+        for (let i = 0; i < 3; i++) {
+          shockwaves.push({
+            x: ox,
+            y: oy,
+            start: now + i * 170,
+            r0: R * (.52 + i * .05),
+            r1: far * (1 - i * .09),
+            dur: 2100 + i * 280,
+            width: 2.4 - i * .5,
+            alpha: .52 - i * .11
+          });
+        }
+      }
+
+      function drawShockwaves(now) {
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const s = shockwaves[i];
+          const u = (now - s.start) / s.dur;
+
+          if (u < 0) continue;
+          if (u > 1) { shockwaves.splice(i, 1); continue; }
+
+          const e = easeOutCubic(u);
+          const r = s.r0 + (s.r1 - s.r0) * e;
+          const a = s.alpha * Math.pow(1 - u, 2);
+
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          ctx.strokeStyle = `rgba(255,150,210,${a})`;
+          ctx.lineWidth = s.width * (1 - u) + .4;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, r, 0, TAU);
+          ctx.stroke();
+
+          ctx.strokeStyle = `rgba(175,120,255,${a * .4})`;
+          ctx.lineWidth = s.width * 2.4 * (1 - u) + 1;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, r * .985, 0, TAU);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      /* ── звёздный ветер из сердца ── */
+      function spawnWind(count, scale = 1) {
+        const now = performance.now() / 1000;
+
+        for (let i = 0; i < count; i++) {
+          if (wind.length >= 190) break;
+
+          const t = Math.random() * TAU;
+          const p = raggedPoint(t, now);
+          const plen = Math.hypot(p.x, p.y) || 1;
+          const nx = p.x / plen;
+          const ny = -p.y / plen;
+          const sp = rand(10, 68) * (.6 + scale * .4);
+
+          wind.push({
+            x: heartCX + p.x * R * scale * .94,
+            y: heartCY - p.y * R * scale * .94,
+            vx: nx * sp + rand(-9, 9),
+            vy: ny * sp + rand(-9, 9),
+            life: 0,
+            max: rand(1.6, 4.4),
+            size: rand(.8, 2.8),
+            rgb: Math.random() < .55 ? pickNebulaColor(p.x, .5) : [255, 228, 246]
+          });
+        }
+      }
+
+      function drawWind(dt) {
+        if (!wind.length) return;
+
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
-        ctx.globalAlpha = .38 * revealEase;
-        ctx.drawImage(glowCv, hx - gs / 2, hy - gs / 2, gs, gs);
+
+        for (let i = wind.length - 1; i >= 0; i--) {
+          const p = wind[i];
+          p.life += dt;
+          if (p.life > p.max) { wind.splice(i, 1); continue; }
+
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vx *= .992;
+          p.vy *= .992;
+
+          const u = p.life / p.max;
+          const a = Math.sin(Math.min(1, u) * Math.PI) * .5;
+          const s = p.size * (1 + u * 2.2);
+
+          ctx.globalAlpha = a;
+          ctx.drawImage(glowSprite(p.rgb, .1), p.x - s / 2, p.y - s / 2, s, s);
+        }
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+
+      /* ── звёздная пыль за курсором ── */
+      const TRAIL_COLORS = [[255, 255, 255], [255, 170, 210], [160, 220, 255], [205, 150, 255]];
+
+      function spawnTrail(x, y) {
+        if (trail.length >= 180) return;
+
+        const n = Math.random() < .55 ? 3 : 2;
+        for (let i = 0; i < n; i++) {
+          trail.push({
+            x: x + rand(-5, 5),
+            y: y + rand(-5, 5),
+            vx: rand(-20, 20),
+            vy: rand(-24, 10),
+            life: 0,
+            max: rand(1.0, 2.2),
+            size: rand(1.6, 4.5),
+            rgb: TRAIL_COLORS[(Math.random() * TRAIL_COLORS.length) | 0]
+          });
+        }
+      }
+
+      function drawTrail(dt) {
+        if (!trail.length) return;
+
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+
+        for (let i = trail.length - 1; i >= 0; i--) {
+          const p = trail[i];
+          p.life += dt;
+          if (p.life > p.max) { trail.splice(i, 1); continue; }
+
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vx *= .97;
+          p.vy = p.vy * .97 + 10 * dt;
+
+          const u = p.life / p.max;
+          const a = (1 - u) * (1 - u) * .95;
+          const s = p.size * (1 + u * 1.8);
+
+          ctx.globalAlpha = a;
+          ctx.drawImage(glowSprite(p.rgb, .08), p.x - s / 2, p.y - s / 2, s, s);
+        }
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+
+      function drawCursorGlow() {
+        if (!pointerSeen || reduceMotion) return;
+
+        const x = mx * W;
+        const y = my * H;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, 120);
+        g.addColorStop(0, "rgba(255,190,225,.07)");
+        g.addColorStop(.5, "rgba(180,120,255,.035)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = g;
+        ctx.fillRect(x - 120, y - 120, 240, 240);
         ctx.restore();
       }
 
-      drawNebula(time, sinceOpen);
-
-      const size = NSIZE * heartScale;
-
-      ctx.save();
-      ctx.translate(hx, hy);
-      ctx.rotate(tilt);
-      ctx.globalAlpha = revealEase;
-      ctx.drawImage(neb, -size / 2, -size / 2, size, size);
-
-      // мягкий bloom
-      ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = .20 * revealEase;
-      ctx.drawImage(neb, -size * .512, -size * .512, size * 1.024, size * 1.024);
-      ctx.restore();
-      ctx.globalAlpha = 1;
-
-      drawCore(time, beat, hx, hy);
-    }
-
-    drawShockwaves(now);
-    drawCursorGlow();
-    drawTrail(dt);
-    drawBurst(dt);
-
-    // вспышка при открытии
-    if (opened && sinceOpen < .9){
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = `rgba(255,220,240,${.10 * Math.exp(-sinceOpen * 6)})`;
-      ctx.fillRect(0, 0, W, H);
-      ctx.restore();
-    }
-
-    // лёгкий звёздный ветер всё время после открытия
-    if (opened && !reduceMotion){
-      windTimer += dt;
-      if (windTimer > .42 && wind.length < 110){
-        spawnWind(W < 640 ? 1 : 2, heartScale);
-        windTimer = 0;
+      /* ── вспышка при открытии ── */
+      function burstAt(x, y) {
+        for (let i = 0; i < 160; i++) {
+          const a = Math.random() * TAU;
+          const sp = rand(40, 380);
+          burst.push({
+            x, y,
+            vx: Math.cos(a) * sp,
+            vy: Math.sin(a) * sp,
+            life: 0,
+            max: rand(.9, 2.1),
+            size: rand(1.2, 4.6),
+            rgb: Math.random() < .5 ? [255, 170, 210] : (Math.random() < .6 ? [255, 255, 255] : [190, 120, 255])
+          });
+        }
       }
-    }
 
-    requestAnimationFrame(frame);
-  }
+      function drawBurst(dt) {
+        if (!burst.length) return;
 
-  /* ─────────────────────────────────────────────
-     ЗВУК — тихий эмбиент после клика
-     ───────────────────────────────────────────── */
-  let audioCtx = null;
-  let master = null;
-  let heartBus = null;
-  let muted = false;
-  let beatTimer = null;
-  let nextBeat = 0;
-  const soundBtn = document.getElementById("sound");
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
 
-  function startAudio(){
-    if (audioCtx) {
-      if (audioCtx.state === "suspended") audioCtx.resume();
-      return;
-    }
+        for (let i = burst.length - 1; i >= 0; i--) {
+          const p = burst[i];
+          p.life += dt;
+          if (p.life > p.max) {
+            burst.splice(i, 1);
+            continue;
+          }
 
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
+          p.vx *= .985;
+          p.vy = p.vy * .985 + 26 * dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
 
-    try {
-      audioCtx = new AC();
-      master = audioCtx.createGain();
-      master.gain.value = 0;
-      master.connect(audioCtx.destination);
+          const fade = 1 - p.life / p.max;
+          const s = p.size * (1 + p.life * 1.4);
+          ctx.globalAlpha = fade * .8;
+          ctx.drawImage(glowSprite(p.rgb), p.x - s / 2, p.y - s / 2, s, s);
+        }
 
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.value = 950;
-      filter.Q.value = .35;
-      filter.connect(master);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
 
-      // отдельная шина для стука сердца
-      heartBus = audioCtx.createGain();
-      heartBus.gain.value = .75;
-      heartBus.connect(master);
+      /* ── сердцебиение ── */
+      /* ── яркая звезда в сердце туманности ── */
+      function drawCore(time, beat, hx, hy) {
+        const boost = opened ? Math.exp(-(performance.now() - openedAt) / 1000 * 1.4) : 0;
+        const cx = hx;
+        const cy = hy - NR * .07;
+        const pulse = .9 + .1 * Math.sin(time * 1.6) + .22 * beat + .35 * boost;
+        const s = NR * .19 * pulse;
 
-      // ля мажор: A2, E3, A3, C#4, E4
-      const notes = [110, 164.81, 220, 277.18, 329.63];
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
 
-      notes.forEach((freq, i) => {
+        ctx.globalAlpha = (.85 + .15 * boost) * revealEase;
+        ctx.drawImage(glowSprite([255, 240, 250], .12), cx - s / 2, cy - s / 2, s, s);
+
+        const len = NR * .5 * pulse;
+
+        const horiz = ctx.createLinearGradient(cx - len, cy, cx + len, cy);
+        horiz.addColorStop(0, "rgba(255,200,230,0)");
+        horiz.addColorStop(.5, "rgba(255,255,255,.92)");
+        horiz.addColorStop(1, "rgba(255,200,230,0)");
+
+        const vert = ctx.createLinearGradient(cx, cy - len, cx, cy + len);
+        vert.addColorStop(0, "rgba(210,190,255,0)");
+        vert.addColorStop(.5, "rgba(255,255,255,.8)");
+        vert.addColorStop(1, "rgba(210,190,255,0)");
+
+        ctx.globalAlpha = .45 * revealEase;
+        ctx.lineWidth = 1.1;
+        ctx.strokeStyle = horiz;
+        ctx.beginPath();
+        ctx.moveTo(cx - len, cy);
+        ctx.lineTo(cx + len, cy);
+        ctx.stroke();
+
+        ctx.strokeStyle = vert;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - len);
+        ctx.lineTo(cx, cy + len);
+        ctx.stroke();
+
+        // короткие диагональные лучи
+        const d = len * .42;
+        const diag = ctx.createLinearGradient(cx - d, cy - d, cx + d, cy + d);
+        diag.addColorStop(0, "rgba(255,220,245,0)");
+        diag.addColorStop(.5, "rgba(255,240,255,.55)");
+        diag.addColorStop(1, "rgba(255,220,245,0)");
+
+        ctx.globalAlpha = .28 * revealEase;
+        ctx.strokeStyle = diag;
+        ctx.beginPath();
+        ctx.moveTo(cx - d, cy - d);
+        ctx.lineTo(cx + d, cy + d);
+        ctx.moveTo(cx + d, cy - d);
+        ctx.lineTo(cx - d, cy + d);
+        ctx.stroke();
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+
+      function heartbeat(t) {
+        const period = 2.35;
+        const p = ((((t - beatOffset) % period) + period) % period) / period;
+        const b1 = Math.exp(-Math.pow((p - .03) / .045, 2));
+        const b2 = .62 * Math.exp(-Math.pow((p - .19) / .055, 2));
+        return b1 + b2;
+      }
+
+      /* ── главный цикл ── */
+      let prev = performance.now();
+
+      function frame(now) {
+        const dt = Math.min(.05, (now - prev) / 1000);
+        prev = now;
+        const time = now / 1000;
+
+        mx += (tmx - mx) * .045;
+        my += (tmy - my) * .045;
+
+        const sinceOpen = opened ? (now - openedAt) / 1000 : 0;
+
+        if (opened) {
+          reveal = clamp01((now - revealStart) / 2200);
+          revealEase = easeOutCubic(reveal);
+        }
+
+        const beat = reduceMotion ? 0 : heartbeat(time);
+        const awaken = opened ? Math.exp(-sinceOpen * 1.35) : 0;
+        const kick = opened ? awaken * Math.sin(sinceOpen * 10.5) * .055 : 0;
+        const heartScale = Math.max(.72, Math.min(1.16,
+          (0.86 + .14 * easeOutBack(reveal)) * (1 + .028 * beat + kick)
+        ));
+
+        const hx = heartCX;
+        const hy = heartCY;
+        const tilt = 0;
+
+        ctx.clearRect(0, 0, W, H);
+
+        drawStars(time);
+        drawMeteors(dt, now);
+        drawWind(dt);
+
+        // ореол вокруг сердца
+        if (revealEase > 0) {
+          const halo = ctx.createRadialGradient(
+            hx, hy, NR * .15,
+            hx, hy, NR * 2.05
+          );
+          halo.addColorStop(0, `rgba(255,70,140,${.13 * revealEase})`);
+          halo.addColorStop(.45, `rgba(160,70,255,${.07 * revealEase})`);
+          halo.addColorStop(1, "rgba(0,0,0,0)");
+
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          ctx.fillStyle = halo;
+          ctx.fillRect(0, 0, W, H);
+          ctx.restore();
+        }
+
+        if (revealEase > 0) {
+          // мягкое облако свечения позади сердца
+          if (glowCv) {
+            const gs = glowSize * (1 + .02 * beat) * (0.92 + .08 * revealEase);
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = .38 * revealEase;
+            ctx.drawImage(glowCv, hx - gs / 2, hy - gs / 2, gs, gs);
+            ctx.restore();
+          }
+
+          drawNebula(time, sinceOpen);
+
+          const size = NSIZE * heartScale;
+
+          ctx.save();
+          ctx.translate(hx, hy);
+          ctx.rotate(tilt);
+          ctx.globalAlpha = revealEase;
+          ctx.drawImage(neb, -size / 2, -size / 2, size, size);
+
+          // мягкий bloom
+          ctx.globalCompositeOperation = "lighter";
+          ctx.globalAlpha = .20 * revealEase;
+          ctx.drawImage(neb, -size * .512, -size * .512, size * 1.024, size * 1.024);
+          ctx.restore();
+          ctx.globalAlpha = 1;
+
+          drawCore(time, beat, hx, hy);
+        }
+
+        drawShockwaves(now);
+        drawCursorGlow();
+        drawTrail(dt);
+        drawBurst(dt);
+
+        // вспышка при открытии
+        if (opened && sinceOpen < .9) {
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          ctx.fillStyle = `rgba(255,220,240,${.10 * Math.exp(-sinceOpen * 6)})`;
+          ctx.fillRect(0, 0, W, H);
+          ctx.restore();
+        }
+
+        // лёгкий звёздный ветер всё время после открытия
+        if (opened && !reduceMotion) {
+          windTimer += dt;
+          if (windTimer > .42 && wind.length < 110) {
+            spawnWind(W < 640 ? 1 : 2, heartScale);
+            windTimer = 0;
+          }
+        }
+
+        requestAnimationFrame(frame);
+      }
+
+      /* ─────────────────────────────────────────────
+         ЗВУК — тихий эмбиент после клика
+         ───────────────────────────────────────────── */
+      let audioCtx = null;
+      let master = null;
+      let heartBus = null;
+      let muted = false;
+      let beatTimer = null;
+      let nextBeat = 0;
+      const soundBtn = document.getElementById("sound");
+
+      function startAudio() {
+        if (audioCtx) {
+          if (audioCtx.state === "suspended") audioCtx.resume();
+          return;
+        }
+
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+
+        try {
+          audioCtx = new AC();
+          master = audioCtx.createGain();
+          master.gain.value = 0;
+          master.connect(audioCtx.destination);
+
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = "lowpass";
+          filter.frequency.value = 950;
+          filter.Q.value = .35;
+          filter.connect(master);
+
+          // отдельная шина для стука сердца
+          heartBus = audioCtx.createGain();
+          heartBus.gain.value = .75;
+          heartBus.connect(master);
+
+          // ля мажор: A2, E3, A3, C#4, E4
+          const notes = [110, 164.81, 220, 277.18, 329.63];
+
+          notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            osc.type = i < 2 ? "sine" : "triangle";
+            osc.frequency.value = freq;
+            osc.detune.value = rand(-4, 4);
+
+            const gain = audioCtx.createGain();
+            gain.gain.value = i < 2 ? .16 : .055;
+
+            const lfo = audioCtx.createOscillator();
+            lfo.frequency.value = .04 + i * .017;
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.value = 1.5 + i * .6;
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc.detune);
+            lfo.start();
+
+            osc.connect(gain);
+            gain.connect(filter);
+            osc.start();
+          });
+
+          master.gain.linearRampToValueAtTime(muted ? 0 : .05, audioCtx.currentTime + 4);
+          if (opened) startHeartbeatScheduler();
+        } catch (e) {
+          audioCtx = null;
+          master = null;
+          heartBus = null;
+        }
+      }
+
+      /* ── стук сердца в такт визуальному биению ── */
+      function startHeartbeatScheduler() {
+        if (!audioCtx || !heartBus) return;
+        if (beatTimer) return;
+        if (audioCtx.state === "suspended") audioCtx.resume().catch(() => { });
+
+        nextBeat = audioCtx.currentTime + .35;
+        beatOffset = (performance.now() / 1000 + (nextBeat - audioCtx.currentTime)) - .03 * 2.35;
+
+        if (!beatTimer) beatTimer = setInterval(scheduleHeartbeat, 200);
+        scheduleHeartbeat();
+      }
+
+      function scheduleHeartbeat() {
+        if (!audioCtx || !heartBus || audioCtx.state !== "running") return;
+
+        const now = audioCtx.currentTime;
+        if (nextBeat < now - .05) nextBeat = now + .12;
+
+        while (nextBeat < now + .6) {
+          thump(nextBeat, 1);
+          thump(nextBeat + .19 * 2.35, .52);
+          nextBeat += 2.35;
+        }
+      }
+
+      function thump(when, vel) {
+        if (!audioCtx || !heartBus) return;
+
         const osc = audioCtx.createOscillator();
-        osc.type = i < 2 ? "sine" : "triangle";
-        osc.frequency.value = freq;
-        osc.detune.value = rand(-4, 4);
-
         const gain = audioCtx.createGain();
-        gain.gain.value = i < 2 ? .16 : .055;
-
-        const lfo = audioCtx.createOscillator();
-        lfo.frequency.value = .04 + i * .017;
-        const lfoGain = audioCtx.createGain();
-        lfoGain.gain.value = 1.5 + i * .6;
-        lfo.connect(lfoGain);
-        lfoGain.connect(osc.detune);
-        lfo.start();
-
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(62, when);
+        osc.frequency.exponentialRampToValueAtTime(36, when + .18);
+        gain.gain.setValueAtTime(.0001, when);
+        gain.gain.linearRampToValueAtTime(.62 * vel, when + .014);
+        gain.gain.exponentialRampToValueAtTime(.0001, when + .32);
         osc.connect(gain);
-        gain.connect(filter);
-        osc.start();
+        gain.connect(heartBus);
+        osc.start(when);
+        osc.stop(when + .36);
+
+        // более слышимая «плотная» составляющая
+        const body = audioCtx.createOscillator();
+        const bg = audioCtx.createGain();
+        body.type = "triangle";
+        body.frequency.setValueAtTime(96, when);
+        body.frequency.exponentialRampToValueAtTime(48, when + .16);
+        bg.gain.setValueAtTime(.0001, when);
+        bg.gain.linearRampToValueAtTime(.16 * vel, when + .012);
+        bg.gain.exponentialRampToValueAtTime(.0001, when + .26);
+        body.connect(bg);
+        bg.connect(heartBus);
+        body.start(when);
+        body.stop(when + .3);
+
+        // мягкий щелчок-клапан
+        const click = audioCtx.createOscillator();
+        const cg = audioCtx.createGain();
+        click.type = "triangle";
+        click.frequency.setValueAtTime(150, when);
+        click.frequency.exponentialRampToValueAtTime(85, when + .06);
+        cg.gain.setValueAtTime(.0001, when);
+        cg.gain.linearRampToValueAtTime(.09 * vel, when + .006);
+        cg.gain.exponentialRampToValueAtTime(.0001, when + .12);
+        click.connect(cg);
+        cg.connect(heartBus);
+        click.start(when);
+        click.stop(when + .14);
+      }
+
+      soundBtn.addEventListener("click", () => {
+        if (!audioCtx) startAudio();
+        if (!master) return;
+
+        muted = !muted;
+        master.gain.cancelScheduledValues(audioCtx.currentTime);
+        master.gain.linearRampToValueAtTime(
+          muted ? 0 : .05,
+          audioCtx.currentTime + .5
+        );
+        soundBtn.classList.toggle("off", muted);
+        soundBtn.setAttribute("aria-label", muted ? "Включить звук" : "Выключить звук");
       });
 
-      master.gain.linearRampToValueAtTime(muted ? 0 : .05, audioCtx.currentTime + 4);
-      if (opened) startHeartbeatScheduler();
-    } catch (e) {
-      audioCtx = null;
-      master = null;
-      heartBus = null;
-    }
-  }
+      /* ─────────────────────────────────────────────
+         СТАРТ
+         ───────────────────────────────────────────── */
+      const openBtn = document.getElementById("openBtn");
 
-  /* ── стук сердца в такт визуальному биению ── */
-  function startHeartbeatScheduler(){
-    if (!audioCtx || !heartBus) return;
-    if (beatTimer) return;
-    if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+      function openCard() {
+        if (opened) return;
+        opened = true;
+        openedAt = performance.now();
+        revealStart = openedAt;
+        document.body.classList.add("opened");
+        burstAt(heartCX, heartCY);
+        spawnShockwaves();
+        spawnWind(W < 640 ? 120 : 220, .9);
+        startAudio();
+        startHeartbeatScheduler();
+        soundBtn.classList.remove("off");
+      }
 
-    nextBeat = audioCtx.currentTime + .35;
-    beatOffset = (performance.now() / 1000 + (nextBeat - audioCtx.currentTime)) - .03 * 2.35;
+      openBtn.addEventListener("click", openCard);
 
-    if (!beatTimer) beatTimer = setInterval(scheduleHeartbeat, 200);
-    scheduleHeartbeat();
-  }
+      window.addEventListener("pointermove", e => {
+        tmx = e.clientX / Math.max(1, W);
+        tmy = e.clientY / Math.max(1, H);
+        pointerSeen = true;
 
-  function scheduleHeartbeat(){
-    if (!audioCtx || !heartBus || audioCtx.state !== "running") return;
+        if (!opened || reduceMotion) return;
 
-    const now = audioCtx.currentTime;
-    if (nextBeat < now - .05) nextBeat = now + .12;
+        const dx = e.clientX - lastTrailX;
+        const dy = e.clientY - lastTrailY;
+        const now = performance.now();
 
-    while (nextBeat < now + .6){
-      thump(nextBeat, 1);
-      thump(nextBeat + .19 * 2.35, .52);
-      nextBeat += 2.35;
-    }
-  }
+        if (now - lastTrailT > 14 && dx * dx + dy * dy > 16) {
+          spawnTrail(e.clientX, e.clientY);
+          lastTrailX = e.clientX;
+          lastTrailY = e.clientY;
+          lastTrailT = now;
+        }
+      }, { passive: true });
 
-  function thump(when, vel){
-    if (!audioCtx || !heartBus) return;
+      let resizeTimer = null;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 120);
+      });
 
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(62, when);
-    osc.frequency.exponentialRampToValueAtTime(36, when + .18);
-    gain.gain.setValueAtTime(.0001, when);
-    gain.gain.linearRampToValueAtTime(.62 * vel, when + .014);
-    gain.gain.exponentialRampToValueAtTime(.0001, when + .32);
-    osc.connect(gain);
-    gain.connect(heartBus);
-    osc.start(when);
-    osc.stop(when + .36);
-
-    // более слышимая «плотная» составляющая
-    const body = audioCtx.createOscillator();
-    const bg = audioCtx.createGain();
-    body.type = "triangle";
-    body.frequency.setValueAtTime(96, when);
-    body.frequency.exponentialRampToValueAtTime(48, when + .16);
-    bg.gain.setValueAtTime(.0001, when);
-    bg.gain.linearRampToValueAtTime(.16 * vel, when + .012);
-    bg.gain.exponentialRampToValueAtTime(.0001, when + .26);
-    body.connect(bg);
-    bg.connect(heartBus);
-    body.start(when);
-    body.stop(when + .3);
-
-    // мягкий щелчок-клапан
-    const click = audioCtx.createOscillator();
-    const cg = audioCtx.createGain();
-    click.type = "triangle";
-    click.frequency.setValueAtTime(150, when);
-    click.frequency.exponentialRampToValueAtTime(85, when + .06);
-    cg.gain.setValueAtTime(.0001, when);
-    cg.gain.linearRampToValueAtTime(.09 * vel, when + .006);
-    cg.gain.exponentialRampToValueAtTime(.0001, when + .12);
-    click.connect(cg);
-    cg.connect(heartBus);
-    click.start(when);
-    click.stop(when + .14);
-  }
-
-  soundBtn.addEventListener("click", () => {
-    if (!audioCtx) startAudio();
-    if (!master) return;
-
-    muted = !muted;
-    master.gain.cancelScheduledValues(audioCtx.currentTime);
-    master.gain.linearRampToValueAtTime(
-      muted ? 0 : .05,
-      audioCtx.currentTime + .5
-    );
-    soundBtn.classList.toggle("off", muted);
-    soundBtn.setAttribute("aria-label", muted ? "Включить звук" : "Выключить звук");
-  });
-
-  /* ─────────────────────────────────────────────
-     СТАРТ
-     ───────────────────────────────────────────── */
-  const openBtn = document.getElementById("openBtn");
-
-  function openCard(){
-    if (opened) return;
-    opened = true;
-    openedAt = performance.now();
-    revealStart = openedAt;
-    document.body.classList.add("opened");
-    burstAt(heartCX, heartCY);
-    spawnShockwaves();
-    spawnWind(W < 640 ? 120 : 220, .9);
-    startAudio();
-    startHeartbeatScheduler();
-    soundBtn.classList.remove("off");
-  }
-
-  openBtn.addEventListener("click", openCard);
-
-  window.addEventListener("pointermove", e => {
-    tmx = e.clientX / Math.max(1, W);
-    tmy = e.clientY / Math.max(1, H);
-    pointerSeen = true;
-
-    if (!opened || reduceMotion) return;
-
-    const dx = e.clientX - lastTrailX;
-    const dy = e.clientY - lastTrailY;
-    const now = performance.now();
-
-    if (now - lastTrailT > 14 && dx * dx + dy * dy > 16){
-      spawnTrail(e.clientX, e.clientY);
-      lastTrailX = e.clientX;
-      lastTrailY = e.clientY;
-      lastTrailT = now;
-    }
-  }, { passive: true });
-
-  let resizeTimer = null;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(resize, 120);
-  });
-
-  resize();
-  requestAnimationFrame(frame);
-})();
-</script>
+      resize();
+      requestAnimationFrame(frame);
+    })();
+  </script>
 </body>
+
 </html>
