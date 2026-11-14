@@ -230,6 +230,56 @@
       text-shadow: 0 0 16px rgba(255, 80, 150, .5);
     }
 
+    /* ── секретное послание после клика по сердцу ── */
+    .secret {
+      max-height: 0;
+      margin: 0 auto;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(10px);
+      filter: blur(8px);
+      font-size: clamp(.82rem, 1.9vw, 1.02rem);
+      line-height: 1.5;
+      color: #ffe2f1;
+      text-shadow: 0 0 22px rgba(255, 120, 190, .55);
+      transition: max-height .9s ease, opacity .9s ease, transform .9s ease, filter .9s ease, margin .9s ease;
+    }
+
+    .secret.show {
+      max-height: 80px;
+      margin-bottom: 14px;
+      opacity: 1;
+      transform: none;
+      filter: blur(0);
+      animation: secretGlow 5.5s ease-in-out infinite;
+    }
+
+    @keyframes secretGlow {
+      0%, 100% { text-shadow: 0 0 18px rgba(255, 120, 190, .45); }
+      50% { text-shadow: 0 0 30px rgba(255, 160, 215, .85), 0 0 60px rgba(190, 120, 255, .35); }
+    }
+
+    /* ── подсказка «нажми на сердце» ── */
+    .hint {
+      display: block;
+      margin-top: 16px;
+      font-size: clamp(.6rem, 1.35vw, .72rem);
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: rgba(255, 190, 220, .55);
+      opacity: 0;
+      transition: opacity 1.6s ease 2.4s;
+    }
+
+    body.opened .hint {
+      opacity: 1;
+    }
+
+    body.clicked .hint {
+      opacity: 0;
+      transition-delay: 0s;
+    }
+
     /* ── звук ── */
     #sound {
       position: fixed;
@@ -314,9 +364,11 @@
   <button id="sound" type="button" aria-label="Включить или выключить звук">♪</button>
 
   <div class="copy">
+    <div id="secret" class="secret" aria-live="polite"></div>
     <h1 id="title" class="reveal d1">Для тебя</h1>
     <p id="message" class="message reveal d2"></p>
     <span id="signature" class="signature reveal d3">Твой Гера</span>
+    <span id="hint" class="hint">нажми на сердце</span>
   </div>
 
   <script>
@@ -333,12 +385,20 @@
           "Ты — моя вселенная.",
           "Я люблю тебя больше, чем звёзд на небе."
         ],
-        signature: "Твой Гера"
+        signature: "Твой Гера",
+        // эти строки появляются по клику на сердце
+        secrets: [
+          "{name}, ты — моё самое красивое чудо.",
+          "В каждой вселенной я снова выбираю тебя.",
+          "Ты сияешь ярче, чем все звёзды вместе."
+        ]
       };
 
       const titleEl = document.getElementById("title");
       const messageEl = document.getElementById("message");
       const signatureEl = document.getElementById("signature");
+      const secretEl = document.getElementById("secret");
+      const hintEl = document.getElementById("hint");
 
       titleEl.textContent = CONFIG.name ? `${CONFIG.title}, ${CONFIG.name}` : CONFIG.title;
       messageEl.innerHTML = CONFIG.message
@@ -379,6 +439,12 @@
       let trail = [];
       let shockwaves = [];
       let wind = [];
+      let flutters = [];
+      let washes = [];
+      let spaceObjects = [];
+      let galaxySprite = null;
+      let noiseCv = null;
+      let nebDpr = 1.5;
 
       let mx = .5, my = .5, tmx = .5, tmy = .5;
       let opened = false;
@@ -387,6 +453,11 @@
       let lastMeteor = 0, nextMeteor = 3500;
       let pointerSeen = false, lastTrailX = 0, lastTrailY = 0, lastTrailT = 0;
       let beatOffset = 0;
+      let heartScaleNow = 1;
+      let reactAt = -1e9, reactX = 0, reactY = 0, reactPulse = 0;
+      let secretTimer = null, secretIndex = 0;
+      let lastNebulaDraw = 0;
+      let heartHover = false;
 
       const TAU = Math.PI * 2;
       const rand = (a, b) => a + Math.random() * (b - a);
@@ -541,13 +612,14 @@
 
       /* ── мягкое внешнее свечение (один раз на ресайз) ── */
       function buildGlow() {
+        const glowDpr = Math.min(dpr, 1.25);
         glowSize = NSIZE * 1.5;
         glowCv = document.createElement("canvas");
-        glowCv.width = Math.round(glowSize * dpr);
-        glowCv.height = Math.round(glowSize * dpr);
+        glowCv.width = Math.round(glowSize * glowDpr);
+        glowCv.height = Math.round(glowSize * glowDpr);
 
         const g = glowCv.getContext("2d");
-        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        g.setTransform(glowDpr, 0, 0, glowDpr, 0, 0);
 
         const cx = glowSize / 2;
         const cy = glowSize / 2 - R * .155;
@@ -567,7 +639,7 @@
 
       /* ── частицы туманности ── */
       function buildParticles() {
-        const count = W < 640 ? 1500 : 3200;
+        const count = W < 640 ? 1000 : 2200;
         particles = [];
 
         for (let i = 0; i < count; i++) {
@@ -576,15 +648,15 @@
 
           // радиальный коэффициент: ближе к краю — плотнее
           let k;
-          if (i < count * .18) {
+          if (i < count * .16) {
             k = rand(.90, 1.0);
           } else {
             k = Math.pow(Math.random(), .58);
           }
 
           // лёгкое дрожание внутри
-          const jx = rand(-.014, .014);
-          const jy = rand(-.014, .014);
+          const jx = rand(-.018, .018);
+          const jy = rand(-.018, .018);
 
           const x = edge.x * k + jx;
           const y = edge.y * k + jy;
@@ -594,11 +666,11 @@
             x, y,
             k,
             rgb: pickNebulaColor(x, centerBias),
-            size: rand(.8, 2.8) * Math.max(.75, NR / 240),
-            alpha: rand(.25, .82) * (1 - k * .18),
+            size: rand(.9, 3.1) * Math.max(.75, NR / 240),
+            alpha: rand(.16, .55) * (1 - k * .15),
             phase: Math.random() * TAU,
-            tw: rand(.35, 1.6),
-            drift: rand(.15, .55),
+            tw: rand(.25, 1.15),
+            drift: rand(.12, .42),
             dir: Math.random() < .5 ? -1 : 1
           });
         }
@@ -607,28 +679,29 @@
       /* ── облака туманности ── */
       function buildClouds() {
         clouds = [];
-        const total = W < 640 ? 32 : 48;
+        const total = W < 640 ? 40 : 58;
 
         for (let i = 0; i < total; i++) {
           const t = Math.random() * TAU;
           const edge = heartPoint(t);
-          const k = rand(.08, .78);
+          const k = rand(.02, .86);
           const x = edge.x * k;
           const y = edge.y * k;
 
           clouds.push({
             x, y,
-            size: NR * rand(.55, 1.35),
-            alpha: rand(.12, .30),
+            size: NR * rand(1.0, 2.45),
+            alpha: rand(.055, .155),
             phase: Math.random() * TAU,
-            speed: rand(.08, .22),
+            speed: rand(.03, .12),
+            rotSpeed: rand(.004, .016) * (Math.random() < .5 ? -1 : 1),
             rgb: pickNebulaColor(x, 1 - k),
-            squash: rand(.55, 1)
+            squash: rand(.45, .95)
           });
         }
 
-        // мелкая клочковатая структура
-        for (let i = 0; i < (W < 640 ? 110 : 190); i++) {
+        // мелкая клочковатая структура — дымная фактура
+        for (let i = 0; i < (W < 640 ? 120 : 190); i++) {
           const t = Math.random() * TAU;
           const edge = heartPoint(t);
           const k = Math.pow(Math.random(), .72);
@@ -637,29 +710,30 @@
 
           clouds.push({
             x, y,
-            size: NR * rand(.08, .32),
-            alpha: rand(.07, .20),
+            size: NR * rand(.14, .55),
+            alpha: rand(.035, .11),
             phase: Math.random() * TAU,
-            speed: rand(.12, .35),
+            speed: rand(.06, .22),
+            rotSpeed: rand(.002, .009) * (Math.random() < .5 ? -1 : 1),
             rgb: pickNebulaColor(x, 1 - k),
-            squash: rand(.45, 1)
+            squash: rand(.4, 1)
           });
         }
       }
 
       function buildDust() {
         dust = [];
-        for (let i = 0; i < (W < 640 ? 12 : 18); i++) {
+        for (let i = 0; i < (W < 640 ? 14 : 20); i++) {
           const t = Math.random() * TAU;
           const edge = heartPoint(t);
           const k = rand(.12, .75);
           dust.push({
             x: edge.x * k,
             y: edge.y * k,
-            size: NR * rand(.32, .92),
-            alpha: rand(.14, .32),
+            size: NR * rand(.36, 1.0),
+            alpha: rand(.07, .17),
             phase: Math.random() * TAU,
-            speed: rand(.06, .16),
+            speed: rand(.04, .13),
             squash: rand(.18, .55),
             rot: Math.random() * TAU
           });
@@ -669,22 +743,22 @@
       /* ── рваные клочья по краю ── */
       function buildTufts() {
         tufts = [];
-        const total = W < 640 ? 64 : 120;
+        const total = W < 640 ? 78 : 142;
 
         for (let i = 0; i < total; i++) {
           const t = Math.random() * TAU;
-          const big = Math.random() < .30;
+          const big = Math.random() < .34;
           const p = heartPoint(t);
 
           tufts.push({
             t,
-            size: NR * (big ? rand(.20, .50) : rand(.04, .14)),
-            alpha: big ? rand(.05, .12) : rand(.08, .20),
-            offset: big ? rand(1.00, 1.16) : rand(.98, 1.07),
+            size: NR * (big ? rand(.22, .56) : rand(.04, .16)),
+            alpha: big ? rand(.035, .095) : rand(.055, .16),
+            offset: big ? rand(1.00, 1.18) : rand(.98, 1.08),
             squash: rand(.28, .9),
             rgb: pickNebulaColor(p.x, .4),
             phase: Math.random() * TAU,
-            speed: rand(.1, .35)
+            speed: rand(.07, .28)
           });
         }
       }
@@ -692,7 +766,7 @@
       /* ── длинные пряди, уходящие наружу ── */
       function buildTendrils() {
         tendrils = [];
-        const total = W < 640 ? 22 : 40;
+        const total = W < 640 ? 14 : 26;
 
         for (let i = 0; i < total; i++) {
           const t = Math.random() * TAU;
@@ -700,14 +774,14 @@
 
           tendrils.push({
             t,
-            len: rand(.12, .42),
-            curve: rand(-.55, .55),
-            width: rand(1.5, 4.0),
-            alpha: rand(.14, .38),
+            len: rand(.10, .34),
+            curve: rand(-.60, .60),
+            width: rand(2.0, 5.5),
+            alpha: rand(.07, .20),
             rgb: pickNebulaColor(p.x, .4),
             phase: Math.random() * TAU,
-            speed: rand(.2, .6),
-            tip: Math.random() < .35
+            speed: rand(.14, .45),
+            tip: Math.random() < .30
           });
         }
       }
@@ -715,7 +789,7 @@
       /* ── тонкие газовые волокна внутри ── */
       function buildFilaments() {
         filaments = [];
-        const total = W < 640 ? 9 : 14;
+        const total = W < 640 ? 7 : 11;
 
         for (let i = 0; i < total; i++) {
           filaments.push({
@@ -723,11 +797,11 @@
             arc: rand(.05, .18),
             k: rand(.40, .90),
             wave: rand(.03, .10),
-            width: rand(.7, 1.5),
-            alpha: rand(.05, .13),
+            width: rand(.8, 1.7),
+            alpha: rand(.035, .10),
             rgb: pickNebulaColor(rand(-.8, .8), .5),
             phase: Math.random() * TAU,
-            speed: rand(.1, .3)
+            speed: rand(.08, .25)
           });
         }
       }
@@ -735,23 +809,23 @@
       /* ── звёздные сгустки внутри туманности ── */
       function buildKnots() {
         knots = [];
-        const total = W < 640 ? 14 : 24;
+        const total = W < 640 ? 12 : 20;
 
         for (let i = 0; i < total; i++) {
           const t = Math.random() * TAU;
           const p = heartPoint(t);
-          const k = Math.pow(Math.random(), .7) * .9;
+          const k = Math.pow(Math.random(), .7) * .88;
           const x = p.x * k;
           const y = p.y * k;
 
           knots.push({
             x, y,
-            size: NR * rand(.015, .05),
-            alpha: rand(.45, .95),
-            rgb: Math.random() < .5 ? [255, 245, 250] : pickNebulaColor(x, .6),
+            size: NR * rand(.012, .042),
+            alpha: rand(.38, .85),
+            rgb: Math.random() < .55 ? [255, 245, 250] : pickNebulaColor(x, .6),
             phase: Math.random() * TAU,
-            tw: rand(.5, 1.8),
-            flare: Math.random() < .35
+            tw: rand(.4, 1.5),
+            flare: Math.random() < .28
           });
         }
       }
@@ -759,26 +833,160 @@
       /* ── куски, выгрызенные из края ── */
       function buildBites() {
         bites = [];
-        const total = W < 640 ? 16 : 24;
+        const total = W < 640 ? 14 : 20;
 
         for (let i = 0; i < total; i++) {
           bites.push({
             t: Math.random() * TAU,
             k: rand(.95, 1.07),
             size: NR * rand(.09, .24),
-            alpha: rand(.26, .52),
+            alpha: rand(.20, .44),
             squash: rand(.30, 1),
             rot: Math.random() * TAU,
             phase: Math.random() * TAU,
-            speed: rand(.05, .2)
+            speed: rand(.04, .16)
           });
         }
       }
 
-      /* ── звёзды ── */
+      /* ── медленные цветовые волны внутри туманности ── */
+      function buildWashes() {
+        washes = [];
+        const total = W < 640 ? 6 : 9;
+        const colors = [
+          [255, 110, 180],
+          [150, 100, 255],
+          [90, 190, 255],
+          [255, 170, 220],
+          [190, 130, 255],
+          [120, 220, 220],
+          [255, 140, 120],
+          [110, 140, 255],
+          [240, 120, 255]
+        ];
+
+        for (let i = 0; i < total; i++) {
+          const a = rand(0, TAU);
+          const d = rand(0, .58);
+          washes.push({
+            x: Math.cos(a) * d,
+            y: Math.sin(a) * d,
+            size: NR * rand(1.2, 2.7),
+            alpha: rand(.012, .032),
+            rgb: colors[i % colors.length],
+            phase: Math.random() * TAU,
+            speed: rand(.012, .04),
+            amp: rand(.06, .16)
+          });
+        }
+      }
+
+      /* ── дымная текстура: многослойный шум (fBm через масштабирование) ── */
+      function buildNoise() {
+        const S = 512;
+        noiseCv = document.createElement("canvas");
+        noiseCv.width = noiseCv.height = S;
+        const g = noiseCv.getContext("2d");
+
+        g.fillStyle = "#808080";
+        g.fillRect(0, 0, S, S);
+        g.imageSmoothingEnabled = true;
+
+        const octaves = [
+          { grid: 6, amp: 1.0, contrast: 90 },
+          { grid: 12, amp: .65, contrast: 80 },
+          { grid: 24, amp: .42, contrast: 70 },
+          { grid: 48, amp: .26, contrast: 60 },
+          { grid: 96, amp: .16, contrast: 55 },
+          { grid: 192, amp: .10, contrast: 45 }
+        ];
+
+        for (const o of octaves) {
+          const small = document.createElement("canvas");
+          small.width = small.height = o.grid;
+          const sg = small.getContext("2d");
+          const img = sg.createImageData(o.grid, o.grid);
+
+          for (let i = 0; i < o.grid * o.grid; i++) {
+            const v = 128 + (Math.random() * 2 - 1) * o.contrast;
+            const c = Math.max(0, Math.min(255, v));
+            img.data[i * 4] = c;
+            img.data[i * 4 + 1] = c;
+            img.data[i * 4 + 2] = c;
+            img.data[i * 4 + 3] = 255;
+          }
+          sg.putImageData(img, 0, 0);
+
+          g.globalAlpha = o.amp;
+          g.drawImage(small, 0, 0, S, S);
+        }
+
+        g.globalAlpha = 1;
+      }
+
+      /* ── далёкая галактика (пререндер) ── */
+      function buildGalaxySprite() {
+        const size = 240;
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+        const g = c.getContext("2d");
+        g.translate(size / 2, size / 2);
+        g.globalCompositeOperation = "lighter";
+
+        for (const arm of [0, Math.PI]) {
+          for (let i = 0; i < 120; i++) {
+            const u = i / 120;
+            const a = u * 3.4 + arm;
+            const r = 4 + u * 86;
+            const x = Math.cos(a) * r;
+            const y = Math.sin(a) * r * .58;
+            const s = 2 + (1 - u) * 9;
+            g.globalAlpha = .035 + .11 * (1 - u);
+            g.drawImage(
+              glowSprite(u < .3 ? [255, 235, 245] : [170, 170, 255], .2),
+              x - s / 2, y - s / 2, s, s
+            );
+          }
+        }
+
+        g.globalAlpha = .65;
+        g.drawImage(glowSprite([255, 240, 250], .1), -22, -22, 44, 44);
+        g.globalAlpha = .22;
+        g.drawImage(glowSprite([190, 170, 255], .04), -58, -58, 116, 116);
+
+        galaxySprite = c;
+      }
+
+      /* ── мелкие объекты на фоне ── */
+      function buildSpaceObjects() {
+        spaceObjects = [];
+        const s = Math.min(W, H);
+
+        spaceObjects.push({
+          type: "galaxy", x: .115, y: .155,
+          size: s * .17, alpha: .30, rot: rand(0, TAU), par: 16
+        });
+        spaceObjects.push({
+          type: "planet", x: .895, y: .145,
+          size: Math.max(15, s * .030), alpha: .70, tilt: -.38, par: 26
+        });
+        spaceObjects.push({
+          type: "moon", x: .865, y: .205,
+          size: Math.max(2.6, s * .0055), alpha: .55, par: 31
+        });
+        spaceObjects.push({
+          type: "blob", x: .20, y: .72, size: s * .30, alpha: .050,
+          rgb: [120, 90, 255], par: 10
+        });
+        spaceObjects.push({
+          type: "blob", x: .82, y: .64, size: s * .26, alpha: .042,
+          rgb: [255, 100, 170], par: 13
+        });
+      }
+        /* ── звёзды ── */
       function buildStars() {
         stars = [];
-        const n = Math.min(560, Math.round(W * H / 2000));
+        const n = Math.min(420, Math.round(W * H / 2600));
 
         for (let i = 0; i < n; i++) {
           const layer = Math.random() < .62 ? 0 : (Math.random() < .72 ? 1 : 2);
@@ -807,6 +1015,7 @@
       /* ── размеры и перестройка ── */
       function resize() {
         dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth < 640 ? 1.75 : 2);
+        nebDpr = Math.min(dpr, window.innerWidth < 640 ? 1.35 : 1.5);
         W = window.innerWidth;
         H = window.innerHeight;
 
@@ -822,17 +1031,21 @@
         heartCY = H * (short ? .34 : .375);
 
         buildStars();
+        if (!galaxySprite) buildGalaxySprite();
+        if (!noiseCv) buildNoise();
+        buildSpaceObjects();
         buildNebulaCanvas();
         lastMeteor = performance.now();
+        lastNebulaDraw = 0;
       }
 
       function buildNebulaCanvas() {
         NSIZE = Math.ceil(R * 2.8);
         neb = document.createElement("canvas");
-        neb.width = Math.round(NSIZE * dpr);
-        neb.height = Math.round(NSIZE * dpr);
+        neb.width = Math.round(NSIZE * nebDpr);
+        neb.height = Math.round(NSIZE * nebDpr);
         nctx = neb.getContext("2d");
-        nctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        nctx.setTransform(nebDpr, 0, 0, nebDpr, 0, 0);
 
         NCX = NSIZE / 2;
         NCY = NSIZE / 2 - R * .155; // центрируем визуальный центр сердца
@@ -840,6 +1053,7 @@
 
         buildParticles();
         buildClouds();
+        buildWashes();
         buildDust();
         buildTufts();
         buildTendrils();
@@ -864,10 +1078,10 @@
           NCX + mox * .4, NCY - NR * .12 + moy * .4, NR * .05,
           NCX + mox * .2, NCY + moy * .2, NR * 1.18
         );
-        base.addColorStop(0, "rgba(145,48,132,.34)");
-        base.addColorStop(.42, "rgba(88,30,136,.25)");
-        base.addColorStop(.78, "rgba(45,16,90,.14)");
-        base.addColorStop(1, "rgba(25,8,55,.055)");
+        base.addColorStop(0, "rgba(145,48,132,.27)");
+        base.addColorStop(.42, "rgba(88,30,136,.19)");
+        base.addColorStop(.78, "rgba(45,16,90,.10)");
+        base.addColorStop(1, "rgba(25,8,55,.035)");
         nctx.globalCompositeOperation = "source-over";
         nctx.globalAlpha = 1;
         nctx.fillStyle = base;
@@ -881,16 +1095,47 @@
         nctx.fillStyle = side;
         nctx.fillRect(0, 0, NSIZE, NSIZE);
 
-        // облака
+        // медленные цветовые волны — внутреннее переливание
+        nctx.globalCompositeOperation = "lighter";
+        for (const w of washes) {
+          const wx = NCX + (w.x + Math.sin(time * w.speed + w.phase) * w.amp) * NR;
+          const wy = NCY - (w.y + Math.cos(time * w.speed * .8 + w.phase) * w.amp) * NR;
+          const s = w.size * (1 + .06 * Math.sin(time * w.speed * .7 + w.phase));
+          nctx.globalAlpha = w.alpha * (.62 + .38 * Math.sin(time * w.speed * 1.3 + w.phase));
+          nctx.drawImage(glowSprite(w.rgb, .02), wx - s / 2, wy - s / 2, s, s);
+        }
+
+        // дымная клубящаяся фактура — два слоя шума ползут навстречу
+        if (noiseCv) {
+          const ns = NSIZE * 1.5;
+          nctx.globalCompositeOperation = "soft-light";
+
+          for (let i = 0; i < 2; i++) {
+            const dir = i ? -1 : 1;
+            const ox = Math.sin(time * .013 + i * 2.1) * NR * .10 * dir;
+            const oy = Math.cos(time * .011 + i * 1.3) * NR * .08 * dir;
+            nctx.globalAlpha = i ? .34 : .5;
+            nctx.drawImage(noiseCv, NCX - ns / 2 + ox, NCY - ns / 2 + oy, ns, ns);
+          }
+
+          nctx.globalAlpha = 1;
+          nctx.globalCompositeOperation = "lighter";
+        }
+
+        // дымные облака — медленно перетекают и закручиваются
         nctx.globalCompositeOperation = "lighter";
         for (const c of clouds) {
-          const breathe = .82 + .18 * Math.sin(time * c.speed + c.phase);
-          const s = c.size * (1 + .025 * Math.sin(time * .18 + c.phase));
-          const x = NCX + c.x * NR + Math.sin(time * .12 + c.phase) * NR * .012 + mox * .7;
-          const y = NCY - c.y * NR + Math.cos(time * .10 + c.phase) * NR * .012 + moy * .7;
+          const breathe = .8 + .2 * Math.sin(time * c.speed + c.phase);
+          const s = c.size * (1 + .04 * Math.sin(time * .14 + c.phase));
+          const ang = time * c.rotSpeed;
+          const ca = Math.cos(ang), sa = Math.sin(ang);
+          const rx = c.x * ca - c.y * sa;
+          const ry = c.x * sa + c.y * ca;
+          const x = NCX + rx * NR + Math.sin(time * .08 + c.phase) * NR * .022 + mox * .7;
+          const y = NCY - ry * NR + Math.cos(time * .07 + c.phase) * NR * .022 + moy * .7;
 
           nctx.globalAlpha = c.alpha * breathe;
-          nctx.drawImage(glowSprite(c.rgb, .18), x - s / 2, y - s * c.squash / 2, s, s * c.squash);
+          nctx.drawImage(glowSprite(c.rgb, .05), x - s / 2, y - s * c.squash / 2, s, s * c.squash);
         }
 
         // пыль — вырезаем мягкие дыры
@@ -1043,11 +1288,11 @@
         // светящийся контур
         nctx.save();
         nctx.globalCompositeOperation = "lighter";
-        nctx.globalAlpha = .06;
-        nctx.strokeStyle = "rgba(255,150,200,.45)";
-        nctx.lineWidth = Math.max(.8, NR / 240);
+        nctx.globalAlpha = .035;
+        nctx.strokeStyle = "rgba(255,150,200,.42)";
+        nctx.lineWidth = Math.max(.6, NR / 300);
         nctx.shadowColor = "rgba(255,80,150,.9)";
-        nctx.shadowBlur = NR * .04;
+        nctx.shadowBlur = NR * .035;
         raggedHeartPath(nctx, NCX, NCY, NR, time);
         nctx.stroke();
         nctx.restore();
@@ -1069,8 +1314,8 @@
             if (j === 0) nctx.moveTo(x, y);
             else nctx.lineTo(x, y);
           }
-          nctx.strokeStyle = `rgba(255,195,230,${.10 + .12 * Math.abs(Math.sin(i * 1.7 + time * .3))})`;
-          nctx.lineWidth = 1.0 + .8 * Math.abs(Math.sin(i * 2.1));
+          nctx.strokeStyle = `rgba(255,205,235,${.055 + .075 * Math.abs(Math.sin(i * 1.7 + time * .3))})`;
+          nctx.lineWidth = .8 + .6 * Math.abs(Math.sin(i * 2.1));
           nctx.stroke();
         }
         nctx.restore();
@@ -1104,6 +1349,123 @@
           }
           nctx.restore();
         }
+
+        // вспышка по краю после клика по сердцу
+        if (opened) {
+          const ra = (performance.now() - reactAt) / 1000;
+          if (ra >= 0 && ra < 2.4) {
+            const fade = Math.exp(-ra * 1.55);
+            const head = (ra * .85) % 1;
+
+            nctx.save();
+            nctx.globalCompositeOperation = "lighter";
+            nctx.lineCap = "round";
+
+            for (let k = 0; k < 2; k++) {
+              const h = (head - k * .045 + 1) % 1;
+              const span = .11;
+              nctx.beginPath();
+              for (let j = 0; j <= 20; j++) {
+                const t = (h + span * (j / 20)) * TAU;
+                const p = raggedPoint(t, time);
+                const x = NCX + p.x * NR;
+                const y = NCY - p.y * NR;
+                if (j === 0) nctx.moveTo(x, y);
+                else nctx.lineTo(x, y);
+              }
+              nctx.strokeStyle = `rgba(255,248,232,${fade * (.75 - k * .24)})`;
+              nctx.lineWidth = 3.0 - k * .8;
+              nctx.shadowColor = "rgba(255,170,220,.95)";
+              nctx.shadowBlur = NR * .07;
+              nctx.stroke();
+            }
+            nctx.restore();
+          }
+        }
+      }
+
+      /* ── далёкие космические объекты ── */
+      function drawSpaceObjects(time) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+
+        for (const o of spaceObjects) {
+          if (o.type === "blob") {
+            const x = o.x * W + (mx - .5) * o.par;
+            const y = o.y * H + (my - .5) * o.par * .7;
+            const s = o.size * (1 + .04 * Math.sin(time * .05 + o.x * 9));
+            ctx.globalAlpha = o.alpha * (.8 + .2 * Math.sin(time * .07 + o.y * 7));
+            ctx.drawImage(glowSprite(o.rgb, .02), x - s / 2, y - s / 2, s, s);
+            continue;
+          }
+
+          const x = o.x * W + (mx - .5) * o.par;
+          const y = o.y * H + (my - .5) * o.par * .7;
+
+          if (o.type === "galaxy") {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(o.rot + time * .006);
+            ctx.globalAlpha = o.alpha * (.88 + .12 * Math.sin(time * .09 + o.rot));
+            ctx.drawImage(galaxySprite, -o.size / 2, -o.size / 2, o.size, o.size);
+            ctx.restore();
+            continue;
+          }
+
+          if (o.type === "planet") {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(o.tilt);
+
+            // кольцо
+            ctx.globalAlpha = o.alpha * .48;
+            ctx.strokeStyle = "rgba(215,190,255,.85)";
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, o.size * 1.95, o.size * .50, 0, 0, TAU);
+            ctx.stroke();
+
+            // мягкое свечение
+            const gs = o.size * 5.5;
+            ctx.globalAlpha = o.alpha * .28;
+            ctx.drawImage(glowSprite([180, 160, 255], .1), -gs / 2, -gs / 2, gs, gs);
+
+            // диск
+            const pg = ctx.createRadialGradient(
+              -o.size * .35, -o.size * .38, 0,
+              0, 0, o.size
+            );
+            pg.addColorStop(0, "rgba(255,238,250,1)");
+            pg.addColorStop(.42, "rgba(195,155,245,1)");
+            pg.addColorStop(1, "rgba(60,28,110,1)");
+            ctx.globalAlpha = o.alpha;
+            ctx.fillStyle = pg;
+            ctx.beginPath();
+            ctx.arc(0, 0, o.size, 0, TAU);
+            ctx.fill();
+            ctx.restore();
+            continue;
+          }
+
+          if (o.type === "moon") {
+            const px = .895 * W + (mx - .5) * 26;
+            const py = .145 * H + (my - .5) * 18;
+            const a = time * .055 + 1.1;
+            const mxp = px + Math.cos(a) * 34;
+            const myp = py + Math.sin(a) * 15;
+            const s = o.size * 4;
+            ctx.globalAlpha = o.alpha * .55;
+            ctx.drawImage(glowSprite([230, 220, 255], .1), mxp - s / 2, myp - s / 2, s, s);
+            ctx.globalAlpha = o.alpha;
+            ctx.fillStyle = "rgba(235,225,255,.9)";
+            ctx.beginPath();
+            ctx.arc(mxp, myp, o.size, 0, TAU);
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
       }
 
       /* ── звёздное небо ── */
@@ -1156,29 +1518,31 @@
 
       /* ── падающие звёзды ── */
       function spawnMeteor(now) {
-        const startX = rand(W * .1, W * .85);
-        const startY = rand(0, H * .3);
-        const angle = rand(.18, .34);
-        const speed = rand(340, 620);
+        const startX = rand(-W * .1, W * .75);
+        const startY = rand(-H * .1, H * .22);
+        const angle = rand(.22, .40);
+        const speed = rand(150, 300);
 
         meteors.push({
           x: startX, y: startY,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
+          g: rand(14, 30),
           life: 0,
-          max: rand(.8, 1.5)
+          max: rand(1.6, 2.8)
         });
 
         lastMeteor = now;
-        nextMeteor = rand(2800, 7500);
+        nextMeteor = rand(4200, 11000);
       }
 
       function drawMeteors(dt, now) {
-        if (!reduceMotion && now - lastMeteor > nextMeteor) spawnMeteor(now);
+        if (opened && !reduceMotion && now - lastMeteor > nextMeteor) spawnMeteor(now);
 
         for (let i = meteors.length - 1; i >= 0; i--) {
           const m = meteors[i];
           m.life += dt;
+          m.vy += m.g * dt;
           m.x += m.vx * dt;
           m.y += m.vy * dt;
 
@@ -1188,30 +1552,30 @@
           }
 
           const fade = Math.sin(clamp01(m.life / m.max) * Math.PI);
-          const tailX = m.x - m.vx * .13;
-          const tailY = m.y - m.vy * .13;
+          const tailX = m.x - m.vx * .22;
+          const tailY = m.y - m.vy * .22;
 
           const g = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
-          g.addColorStop(0, `rgba(255,255,255,${.85 * fade})`);
-          g.addColorStop(.35, `rgba(200,225,255,${.35 * fade})`);
-          g.addColorStop(1, "rgba(160,200,255,0)");
+          g.addColorStop(0, `rgba(255,255,255,${.55 * fade})`);
+          g.addColorStop(.3, `rgba(215,225,255,${.22 * fade})`);
+          g.addColorStop(1, "rgba(170,200,255,0)");
 
           ctx.strokeStyle = g;
-          ctx.lineWidth = 1.4;
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(m.x, m.y);
           ctx.lineTo(tailX, tailY);
           ctx.stroke();
 
-          ctx.globalAlpha = .8 * fade;
-          ctx.drawImage(glowSprite([255, 255, 255], .1), m.x - 6, m.y - 6, 12, 12);
+          ctx.globalAlpha = .5 * fade;
+          ctx.drawImage(glowSprite([255, 255, 255], .1), m.x - 4, m.y - 4, 8, 8);
           ctx.globalAlpha = 1;
         }
       }
 
       /* ── вспышка при открытии ── */
-      function spawnShockwaves() {
-        const far = Math.hypot(W, H) * .72;
+      function spawnShockwaves(scale = 1) {
+        const far = Math.hypot(W, H) * .72 * (scale < 1 ? .72 : 1);
         const now = performance.now();
         const ox = heartCX;
         const oy = heartCY;
@@ -1220,12 +1584,12 @@
           shockwaves.push({
             x: ox,
             y: oy,
-            start: now + i * 170,
+            start: now + i * 150,
             r0: R * (.52 + i * .05),
             r1: far * (1 - i * .09),
-            dur: 2100 + i * 280,
-            width: 2.4 - i * .5,
-            alpha: .52 - i * .11
+            dur: (1700 + i * 240) * (scale < 1 ? .8 : 1),
+            width: (2.4 - i * .5) * scale,
+            alpha: (.52 - i * .11) * Math.min(1, scale + .35)
           });
         }
       }
@@ -1516,8 +1880,11 @@
         const beat = reduceMotion ? 0 : heartbeat(time);
         const awaken = opened ? Math.exp(-sinceOpen * 1.35) : 0;
         const kick = opened ? awaken * Math.sin(sinceOpen * 10.5) * .055 : 0;
-        const heartScale = Math.max(.72, Math.min(1.16,
-          (0.86 + .14 * easeOutBack(reveal)) * (1 + .028 * beat + kick)
+        reactPulse = Math.max(0, reactPulse - dt * 1.6);
+        const sinceReact = (now - reactAt) / 1000;
+        const reactWave = reactPulse * Math.sin(Math.min(1, reactPulse) * Math.PI);
+        const heartScale = Math.max(.72, Math.min(1.42,
+          (0.86 + .14 * easeOutBack(reveal)) * (1 + .028 * beat + kick + .30 * reactWave)
         ));
 
         const hx = heartCX;
@@ -1527,6 +1894,7 @@
         ctx.clearRect(0, 0, W, H);
 
         drawStars(time);
+        drawSpaceObjects(time);
         drawMeteors(dt, now);
         drawWind(dt);
 
@@ -1558,10 +1926,14 @@
             ctx.restore();
           }
 
-          drawNebula(time, sinceOpen);
+          // туманность перерисовываем реже — она медленная, это экономит кадры
+          const nebInterval = sinceReact < 1.4 ? 0 : 42;
+          if (now - lastNebulaDraw >= nebInterval) {
+            drawNebula(time, sinceOpen);
+            lastNebulaDraw = now;
+          }
 
           const size = NSIZE * heartScale;
-
           ctx.save();
           ctx.translate(hx, hy);
           ctx.rotate(tilt);
@@ -1579,6 +1951,7 @@
         }
 
         drawShockwaves(now);
+        drawHearts(dt);
         drawCursorGlow();
         drawTrail(dt);
         drawBurst(dt);
@@ -1588,6 +1961,21 @@
           ctx.save();
           ctx.globalCompositeOperation = "lighter";
           ctx.fillStyle = `rgba(255,220,240,${.10 * Math.exp(-sinceOpen * 6)})`;
+          ctx.fillRect(0, 0, W, H);
+          ctx.restore();
+        }
+
+        // тёплая вспышка по клику на сердце
+        if (sinceReact >= 0 && sinceReact < 1.6) {
+          const g = Math.exp(-sinceReact * 2.4);
+          const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, NR * 2.2);
+          hg.addColorStop(0, `rgba(255,215,240,${.20 * g})`);
+          hg.addColorStop(.55, `rgba(255,120,190,${.09 * g})`);
+          hg.addColorStop(1, "rgba(0,0,0,0)");
+
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          ctx.fillStyle = hg;
           ctx.fillRect(0, 0, W, H);
           ctx.restore();
         }
@@ -1605,15 +1993,56 @@
       }
 
       /* ─────────────────────────────────────────────
-         ЗВУК — тихий эмбиент после клика
+         ЗВУК — тёплый космический эмбиент: орган + пианино
+         Музыка намеренно тише стука сердца
          ───────────────────────────────────────────── */
       let audioCtx = null;
       let master = null;
+      let musicBus = null;
       let heartBus = null;
+      let reverb = null;
       let muted = false;
       let beatTimer = null;
+      let musicTimer = null;
       let nextBeat = 0;
+      let nextChord = 0;
+      let nextPluck = 0;
+      let chordIndex = 0;
       const soundBtn = document.getElementById("sound");
+
+      const MUSIC_LEVEL = .11;
+      const HEART_LEVEL = .92;
+
+      // мягкая космическая прогрессия: Amaj9 → F#m9 → Dmaj9 → E6/9
+      const CHORDS = [
+        [110.00, 164.81, 207.65, 246.94, 329.63],
+        [92.50, 138.59, 164.81, 207.65, 277.18],
+        [73.42, 146.83, 185.00, 220.00, 293.66],
+        [82.41, 123.47, 164.81, 207.65, 246.94]
+      ];
+
+      function makeReverb() {
+        const secs = 3.2;
+        const len = Math.max(1, Math.floor(audioCtx.sampleRate * secs));
+        const buf = audioCtx.createBuffer(2, len, audioCtx.sampleRate);
+
+        for (let ch = 0; ch < 2; ch++) {
+          const d = buf.getChannelData(ch);
+          for (let i = 0; i < len; i++) {
+            d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+          }
+        }
+
+        const conv = audioCtx.createConvolver();
+        conv.buffer = buf;
+
+        const wet = audioCtx.createGain();
+        wet.gain.value = .55;
+        conv.connect(wet);
+        wet.connect(master);
+
+        return conv;
+      }
 
       function startAudio() {
         if (audioCtx) {
@@ -1626,53 +2055,175 @@
 
         try {
           audioCtx = new AC();
+
           master = audioCtx.createGain();
           master.gain.value = 0;
           master.connect(audioCtx.destination);
 
+          // мягкий фильтр — убираем резкость
           const filter = audioCtx.createBiquadFilter();
           filter.type = "lowpass";
-          filter.frequency.value = 950;
-          filter.Q.value = .35;
+          filter.frequency.value = 2400;
+          filter.Q.value = .2;
           filter.connect(master);
 
-          // отдельная шина для стука сердца
+          musicBus = audioCtx.createGain();
+          musicBus.gain.value = MUSIC_LEVEL;
+          musicBus.connect(filter);
+
+          reverb = makeReverb();
+          const send = audioCtx.createGain();
+          send.gain.value = .55;
+          musicBus.connect(send);
+          send.connect(reverb);
+
           heartBus = audioCtx.createGain();
-          heartBus.gain.value = .75;
+          heartBus.gain.value = HEART_LEVEL;
           heartBus.connect(master);
 
-          // ля мажор: A2, E3, A3, C#4, E4
-          const notes = [110, 164.81, 220, 277.18, 329.63];
-
-          notes.forEach((freq, i) => {
-            const osc = audioCtx.createOscillator();
-            osc.type = i < 2 ? "sine" : "triangle";
-            osc.frequency.value = freq;
-            osc.detune.value = rand(-4, 4);
-
-            const gain = audioCtx.createGain();
-            gain.gain.value = i < 2 ? .16 : .055;
-
-            const lfo = audioCtx.createOscillator();
-            lfo.frequency.value = .04 + i * .017;
-            const lfoGain = audioCtx.createGain();
-            lfoGain.gain.value = 1.5 + i * .6;
-            lfo.connect(lfoGain);
-            lfoGain.connect(osc.detune);
-            lfo.start();
-
-            osc.connect(gain);
-            gain.connect(filter);
-            osc.start();
-          });
-
-          master.gain.linearRampToValueAtTime(muted ? 0 : .05, audioCtx.currentTime + 4);
+          startMusic();
+          master.gain.linearRampToValueAtTime(muted ? 0 : 1, audioCtx.currentTime + 5);
           if (opened) startHeartbeatScheduler();
         } catch (e) {
           audioCtx = null;
           master = null;
+          musicBus = null;
           heartBus = null;
+          reverb = null;
         }
+      }
+
+      /* ── орган: медленный аккорд-пад ── */
+      function playPad(freqs, when, dur) {
+        if (!audioCtx || !musicBus) return;
+
+        const pad = audioCtx.createGain();
+        pad.gain.setValueAtTime(.0001, when);
+        pad.gain.linearRampToValueAtTime(.11, when + 2.8);
+        pad.gain.setValueAtTime(.11, when + dur - 2.6);
+        pad.gain.exponentialRampToValueAtTime(.0001, when + dur + 1.6);
+        pad.connect(musicBus);
+
+        for (const f of freqs) {
+          // регистры органа: тон + октава + квинта + верхняя краска
+          for (const [mult, amp] of [[1, 1], [2, .28], [3, .10], [4, .05]]) {
+            const o = audioCtx.createOscillator();
+            o.type = "sine";
+            o.frequency.value = f * mult;
+            o.detune.value = rand(-3, 3);
+
+            const g = audioCtx.createGain();
+            g.gain.value = amp * .19;
+
+            // очень медленное «дыхание» трубы
+            const lfo = audioCtx.createOscillator();
+            lfo.frequency.value = rand(.05, .12);
+            const lg = audioCtx.createGain();
+            lg.gain.value = rand(.6, 1.6);
+            lfo.connect(lg);
+            lg.connect(o.detune);
+            lfo.start(when);
+            lfo.stop(when + dur + 2);
+
+            o.connect(g);
+            g.connect(pad);
+            o.start(when);
+            o.stop(when + dur + 1.8);
+          }
+        }
+      }
+
+      /* ── пианино: мягкий колокольчик-плак ── */
+      function playPluck(freq, when, vel = 1) {
+        if (!audioCtx || !musicBus) return;
+
+        const env = audioCtx.createGain();
+        env.gain.setValueAtTime(.0001, when);
+        env.gain.linearRampToValueAtTime(.15 * vel, when + .01);
+        env.gain.exponentialRampToValueAtTime(.0001, when + 2.4);
+
+        const lp = audioCtx.createBiquadFilter();
+        lp.type = "lowpass";
+        lp.frequency.setValueAtTime(3800, when);
+        lp.frequency.exponentialRampToValueAtTime(800, when + 2.0);
+
+        env.connect(lp);
+        lp.connect(musicBus);
+
+        for (const [mult, amp] of [[1, 1], [2, .26], [3, .09]]) {
+          const o = audioCtx.createOscillator();
+          o.type = "triangle";
+          o.frequency.value = freq * mult;
+
+          const g = audioCtx.createGain();
+          g.gain.value = amp;
+
+          o.connect(g);
+          g.connect(env);
+          o.start(when);
+          o.stop(when + 2.6);
+        }
+      }
+
+      function startMusic() {
+        if (!audioCtx) return;
+        nextChord = audioCtx.currentTime + .3;
+        nextPluck = audioCtx.currentTime + 2.4;
+        if (!musicTimer) musicTimer = setInterval(scheduleMusic, 250);
+        scheduleMusic();
+      }
+
+      function scheduleMusic() {
+        if (!audioCtx || !musicBus || audioCtx.state !== "running") return;
+
+        const now = audioCtx.currentTime;
+        const ahead = now + 1.4;
+
+        while (nextChord < ahead) {
+          const chord = CHORDS[chordIndex % CHORDS.length];
+          playPad(chord, Math.max(nextChord, now + .05), 9);
+          chordIndex++;
+          nextChord += 9;
+        }
+
+        while (nextPluck < ahead) {
+          const chord = CHORDS[(chordIndex - 1 + CHORDS.length) % CHORDS.length];
+          const base = chord[(Math.random() * 3) | 0];
+          const freq = base * (Math.random() < .58 ? 4 : 6);
+
+          playPluck(freq, Math.max(nextPluck, now + .05), rand(.5, 1));
+
+          if (Math.random() < .34) {
+            playPluck(freq * 1.5, nextPluck + rand(.2, .45), rand(.25, .5));
+          }
+
+          nextPluck += rand(1.7, 3.6);
+        }
+      }
+
+      /* ── нежный перезвон по клику на сердце ── */
+      function chime() {
+        if (!audioCtx || !musicBus || muted || audioCtx.state !== "running") return;
+
+        const when = audioCtx.currentTime + .02;
+        const notes = [880, 1108.73, 1318.51];
+
+        notes.forEach((f, i) => {
+          const t = when + i * .07;
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+
+          o.type = "sine";
+          o.frequency.value = f;
+          g.gain.setValueAtTime(.0001, t);
+          g.gain.linearRampToValueAtTime(.085, t + .012);
+          g.gain.exponentialRampToValueAtTime(.0001, t + 1.9);
+
+          o.connect(g);
+          g.connect(musicBus);
+          o.start(t);
+          o.stop(t + 2.1);
+        });
       }
 
       /* ── стук сердца в такт визуальному биению ── */
@@ -1696,7 +2247,7 @@
 
         while (nextBeat < now + .6) {
           thump(nextBeat, 1);
-          thump(nextBeat + .19 * 2.35, .52);
+          thump(nextBeat + .19 * 2.35, .58);
           nextBeat += 2.35;
         }
       }
@@ -1707,43 +2258,29 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(62, when);
-        osc.frequency.exponentialRampToValueAtTime(36, when + .18);
+        osc.frequency.setValueAtTime(64, when);
+        osc.frequency.exponentialRampToValueAtTime(38, when + .2);
         gain.gain.setValueAtTime(.0001, when);
-        gain.gain.linearRampToValueAtTime(.62 * vel, when + .014);
-        gain.gain.exponentialRampToValueAtTime(.0001, when + .32);
+        gain.gain.linearRampToValueAtTime(.66 * vel, when + .016);
+        gain.gain.exponentialRampToValueAtTime(.0001, when + .34);
         osc.connect(gain);
         gain.connect(heartBus);
         osc.start(when);
-        osc.stop(when + .36);
+        osc.stop(when + .38);
 
-        // более слышимая «плотная» составляющая
+        // мягкая «плотность» — без резкого щелчка
         const body = audioCtx.createOscillator();
         const bg = audioCtx.createGain();
-        body.type = "triangle";
-        body.frequency.setValueAtTime(96, when);
-        body.frequency.exponentialRampToValueAtTime(48, when + .16);
+        body.type = "sine";
+        body.frequency.setValueAtTime(98, when);
+        body.frequency.exponentialRampToValueAtTime(58, when + .18);
         bg.gain.setValueAtTime(.0001, when);
-        bg.gain.linearRampToValueAtTime(.16 * vel, when + .012);
-        bg.gain.exponentialRampToValueAtTime(.0001, when + .26);
+        bg.gain.linearRampToValueAtTime(.14 * vel, when + .014);
+        bg.gain.exponentialRampToValueAtTime(.0001, when + .28);
         body.connect(bg);
         bg.connect(heartBus);
         body.start(when);
-        body.stop(when + .3);
-
-        // мягкий щелчок-клапан
-        const click = audioCtx.createOscillator();
-        const cg = audioCtx.createGain();
-        click.type = "triangle";
-        click.frequency.setValueAtTime(150, when);
-        click.frequency.exponentialRampToValueAtTime(85, when + .06);
-        cg.gain.setValueAtTime(.0001, when);
-        cg.gain.linearRampToValueAtTime(.09 * vel, when + .006);
-        cg.gain.exponentialRampToValueAtTime(.0001, when + .12);
-        click.connect(cg);
-        cg.connect(heartBus);
-        click.start(when);
-        click.stop(when + .14);
+        body.stop(when + .32);
       }
 
       soundBtn.addEventListener("click", () => {
@@ -1753,12 +2290,107 @@
         muted = !muted;
         master.gain.cancelScheduledValues(audioCtx.currentTime);
         master.gain.linearRampToValueAtTime(
-          muted ? 0 : .05,
+          muted ? 0 : 1,
           audioCtx.currentTime + .5
         );
         soundBtn.classList.toggle("off", muted);
         soundBtn.setAttribute("aria-label", muted ? "Включить звук" : "Выключить звук");
       });
+
+      /* ─────────────────────────────────────────────
+         КЛИК ПО СЕРДЦУ
+         ───────────────────────────────────────────── */
+      /* ── облачко маленьких сердечек, всплывающих вверх ── */
+      function spawnHearts(count) {
+        for (let i = 0; i < count; i++) {
+          const t = Math.random() * TAU;
+          const p = heartPoint(t);
+          const r = rand(.28, .95);
+
+          flutters.push({
+            x: heartCX + p.x * R * r,
+            y: heartCY - p.y * R * r,
+            vx: rand(-9, 9),
+            vy: rand(-30, -12),
+            size: rand(3.5, 11) * Math.max(.7, R / 240),
+            rot: rand(-.3, .3),
+            spin: rand(-.4, .4),
+            life: 0,
+            max: rand(3.4, 6),
+            rgb: Math.random() < .5
+              ? [255, 140, 190]
+              : (Math.random() < .6 ? [225, 150, 255] : [255, 228, 242])
+          });
+        }
+      }
+
+      function drawHearts(dt) {
+        if (!flutters.length) return;
+
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+
+        for (let i = flutters.length - 1; i >= 0; i--) {
+          const h = flutters[i];
+          h.life += dt;
+          if (h.life > h.max) { flutters.splice(i, 1); continue; }
+
+          h.x += h.vx * dt;
+          h.y += h.vy * dt;
+          h.vy *= .996;
+          h.vx += Math.sin(h.life * .9 + h.rot) * 4 * dt;
+          h.rot += h.spin * dt;
+
+          const u = h.life / h.max;
+          const a = Math.sin(u * Math.PI) * .8;
+
+          ctx.save();
+          ctx.globalAlpha = a;
+          ctx.translate(h.x, h.y);
+          ctx.rotate(h.rot);
+          ctx.fillStyle = `rgb(${h.rgb[0]},${h.rgb[1]},${h.rgb[2]})`;
+          heartPath(ctx, 0, 0, h.size);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+
+      function heartContains(x, y) {
+        const cy = heartCY - R * .15;
+        const px = (x - heartCX) / (R * .95);
+        const py = -(y - cy) / (R * .95);
+        const a = px * px + py * py - 1;
+        return a * a * a - px * px * py * py * py <= .02;
+      }
+
+      function showSecret() {
+        if (!CONFIG.secrets || !CONFIG.secrets.length) return;
+
+        const line = CONFIG.secrets[secretIndex % CONFIG.secrets.length]
+          .replace(/\{name\}/g, CONFIG.name || "");
+        secretIndex++;
+
+        secretEl.classList.remove("show");
+        void secretEl.offsetWidth; // перезапустить анимацию
+        secretEl.textContent = line;
+        secretEl.classList.add("show");
+        document.body.classList.add("clicked");
+      }
+
+      function heartReaction() {
+        reactAt = performance.now();
+        reactPulse = 1;
+        burstAt(heartCX, heartCY);
+        spawnHearts(W < 640 ? 10 : 16);
+        spawnShockwaves(.62);
+        spawnWind(W < 640 ? 60 : 110, 1.12);
+        showSecret();
+        chime();
+      }
+
 
       /* ─────────────────────────────────────────────
          СТАРТ
@@ -1781,12 +2413,25 @@
 
       openBtn.addEventListener("click", openCard);
 
+      window.addEventListener("pointerdown", e => {
+        if (!opened) return;
+        if (e.target.closest && e.target.closest("button")) return;
+        if (!heartContains(e.clientX, e.clientY)) return;
+        heartReaction();
+      }, { passive: true });
+
       window.addEventListener("pointermove", e => {
         tmx = e.clientX / Math.max(1, W);
         tmy = e.clientY / Math.max(1, H);
         pointerSeen = true;
 
         if (!opened || reduceMotion) return;
+
+        const over = heartContains(e.clientX, e.clientY);
+        if (over !== heartHover) {
+          heartHover = over;
+          document.body.style.cursor = over ? "pointer" : "";
+        }
 
         const dx = e.clientX - lastTrailX;
         const dy = e.clientY - lastTrailY;
